@@ -37,7 +37,7 @@ const fs = require("fs"),
 	path = require("path"),
 	os = require("os"),
 	assert = require("assert");
-const {exec, execSync, spawn} = require("child_process");
+const { exec, execSync, spawn } = require("child_process");
 
 // returns the path `str` with posix path formatting:
 function posixify_path(str) {
@@ -51,12 +51,12 @@ function interpolate(str, data) {
 
 const template = (template, vars = {}) => {
 	const handler = new Function(
-	  "vars",
-	  [
-		"const f = (" + Object.keys(vars).join(", ") + ")=>",
-		"`" + template + "`",
-		"return f(...Object.values(vars))"
-	  ].join("\n")
+		"vars",
+		[
+			"const f = (" + Object.keys(vars).join(", ") + ")=>",
+			"`" + template + "`",
+			"return f(...Object.values(vars))"
+		].join("\n")
 	);
 	// console.log(Object.keys(vars));
 	// console.log(handler);
@@ -64,7 +64,7 @@ const template = (template, vars = {}) => {
 };
 
 // prints a number as a C-style float:
-function asCppNumber(n, type="float") {
+function asCppNumber(n, type = "float") {
 	let s = (+n).toString();
 	if (type == "int" || type == "uint8_t" || type == "bool") {
 		return Math.trunc(n).toString()
@@ -95,7 +95,7 @@ function checkBuildEnvironment() {
 			console.warn(`oopsy can't find the ARM GCC build tools, will not be able to upload binary to the Daisy. Please check https://github.com/electro-smith/DaisyWiki/wiki/1e.-Getting-Started-With-Oopsy-(Gen~-Integration) for installation instructions.`)
 			process.exit(-1);
 		}
-		
+
 	} else {
 		// OSX:
 		let locations = ["/opt/homebrew/bin", "/usr/local/bin"]
@@ -111,7 +111,7 @@ function checkBuildEnvironment() {
 			process.exit(-1);
 		}
 		if (fs.existsSync(`${build_tools_path}/dfu-util`)) {
-			has_dfu_util = true; 
+			has_dfu_util = true;
 		} else {
 			console.warn(`oopsy can't find the dfu-util binary in ${build_tools_path}, will not be able to upload binary to the Daisy. Please check https://github.com/electro-smith/DaisyWiki/wiki/1e.-Getting-Started-With-Oopsy-(Gen~-Integration) for installation instructions.`)
 		}
@@ -125,7 +125,7 @@ cmds: 	up/upload = (default) generate & upload
 	  	gen/generate = generate only
 
 target: path to a JSON for the hardware config, 
-		or simply "patch", "patch_sm", "field", "petal", "pod" etc. 
+		or simply "patch", "patch_sm", "field", "petal", "pod", "dpt" etc. 
 		Defaults to "daisy.patch.json"
 
 32kHz, 48kHz, "96kHz" will set the sampling rate of the binary
@@ -171,7 +171,7 @@ const component_defs = {
 				get: "(hardware.${name}.TimeHeldMs()*0.001f)",
 				range: null
 			}
-	  	]
+		]
 	},
 	Switch3: {
 		typename: "daisy::Switch3",
@@ -284,31 +284,31 @@ const component_defs = {
 
 // generate the struct
 function generate_target_struct(target) {
-	
+
 	// flesh out target components:
 	let components = Object.entries(target.components)
-	  .sort((a, b) =>
-		a[1].component < b[1].component
-		  ? -1
-		  : a[1].component > b[1].component
-		  ? 1
-		  : 0
-	  )
-	  .map((pair) => {
-		let [name, def] = pair;
-		def.name = name;
-		let component = component_defs[def.component];
-		if (component) {
-		  // copy component defaults into the def
-		  // TODO this should be recursive for object structures...
-		  for (let k of Object.keys(component)) {
-			if (def[k] == undefined) def[k] = component[k];
-		  }
-		} else {
-		  throw new Error("undefined component kind: " + def.component);
-		}
-		return def;
-	});
+		.sort((a, b) =>
+			a[1].component < b[1].component
+				? -1
+				: a[1].component > b[1].component
+					? 1
+					: 0
+		)
+		.map((pair) => {
+			let [name, def] = pair;
+			def.name = name;
+			let component = component_defs[def.component];
+			if (component) {
+				// copy component defaults into the def
+				// TODO this should be recursive for object structures...
+				for (let k of Object.keys(component)) {
+					if (def[k] == undefined) def[k] = component[k];
+				}
+			} else {
+				throw new Error("undefined component kind: " + def.component);
+			}
+			return def;
+		});
 	target.components = components;
 	target.name = target.name || "custom"
 
@@ -323,7 +323,7 @@ function generate_target_struct(target) {
 		target.defines.OOPSY_OLED_DISPLAY_WIDTH = target.display.dim[0]
 		target.defines.OOPSY_OLED_DISPLAY_HEIGHT = target.display.dim[1]
 	}
-  
+
 	return `
 #include "daisy_seed.h"
 ${target.display ? `#include "dev/oled_ssd130x.h"` : ""}
@@ -334,25 +334,24 @@ struct Daisy {
 		seed.Configure();
 		seed.Init(boost);
 		${components.filter((e) => e.init)
-		.map((e) => `
+			.map((e) => `
 		${template(e.init, e)}`
-		).join("")}
+			).join("")}
 		${components.filter((e) => e.typename == "daisy::Switch")
-		.map((e, i) => `
+			.map((e, i) => `
 		${e.name}.Init(seed.GetPin(${e.pin}), seed.AudioCallbackRate(), ${e.type}, ${e.polarity}, ${e.pull});`
-		).join("")}
+			).join("")}
 		${components.filter((e) => e.typename == "daisy::Switch3").map((e, i) => `
 		${e.name}.Init(seed.GetPin(${e.pin.a}), seed.GetPin(${e.pin.b}));`
-		).join("")}
+			).join("")}
 		${components.filter((e) => e.typename == "daisy::GateIn").map((e, i) => `
 		dsy_gpio_pin ${e.name}_pin = seed.GetPin(${e.pin});
 		${e.name}.Init(&${e.name}_pin);`
-		).join("")}
+			).join("")}
 		${components.filter((e) => e.typename == "daisy::Encoder").map((e, i) => `
 		${e.name}.Init(seed.GetPin(${e.pin.a}), seed.GetPin(${e.pin.b}), seed.GetPin(${e.pin.click}), seed.AudioCallbackRate());`
-		).join("")}
-		static const int ANALOG_COUNT = ${
-		components.filter((e) => e.typename == "daisy::AnalogControl").length};
+			).join("")}
+		static const int ANALOG_COUNT = ${components.filter((e) => e.typename == "daisy::AnalogControl").length};
 		daisy::AdcChannelConfig cfg[ANALOG_COUNT];
 		${components.filter((e) => e.typename == "daisy::AnalogControl").map((e, i) => `
 		cfg[${i}].InitSingle(seed.GetPin(${e.pin}));`).join("")}
@@ -379,15 +378,15 @@ struct Daisy {
 		seed.dac.WriteValue(${e.channel}, 0);`).join("")}
 		${target.display ? `
 		daisy::OledDisplay<${target.display.driver}>::Config display_config;
-		display_config.driver_config.transport_config.Defaults(); ${(target.display.config || []).map(e=>`
+		display_config.driver_config.transport_config.Defaults(); ${(target.display.config || []).map(e => `
 		${e}`).join("")}
-		display.Init(display_config);`:`// no display`}
+		display.Init(display_config);`: `// no display`}
 	}
   
 	void ProcessAllControls() {
 		${components.filter((e) => e.process).map((e) => `
 		${template(e.process, e)}`).join("")}
-		${components.filter((e) => e.meta).map((e) => e.meta.map(m=>`
+		${components.filter((e) => e.meta).map((e) => e.meta.map(m => `
 		${template(m, e)}`).join("")).join("")}
 	}
 	
@@ -419,7 +418,7 @@ struct Daisy {
 	daisy::DaisySeed seed;
 	${components.map((e) => `
 	${e.typename} ${e.name};`).join("")}
-	${target.display ? `daisy::OledDisplay<${target.display.driver}> display;`:`// no display`}
+	${target.display ? `daisy::OledDisplay<${target.display.driver}> display;` : `// no display`}
 	int menu_click = 0, menu_hold = 0, menu_rotate = 0;
 
 };`;
@@ -447,7 +446,7 @@ function run() {
 	let options = {}
 
 	checkBuildEnvironment();
-	
+
 	if (args.length == 0) {
 		console.log(help)
 		return;
@@ -455,26 +454,27 @@ function run() {
 
 	args.forEach(arg => {
 		switch (arg) {
-			case "help": {console.log(help); process.exit(0);} break;
+			case "help": { console.log(help); process.exit(0); } break;
 			case "generate":
-			case "gen": action="generate"; break;
+			case "gen": action = "generate"; break;
 			case "upload":
-			case "up": action="upload"; break;
+			case "up": action = "upload"; break;
 
 			case "pod":
 			case "field":
 			case "petal":
-			case "patch": 
+			case "patch":
 			case "patch_sm":
-			case "versio": target = arg; break;
+			case "versio":
+			case "dpt": target = arg; break;
 			case "bluemchen": target_path = path.join(__dirname, "seed.bluemchen.json"); break;
 			case "nehcmeulb": target_path = path.join(__dirname, "seed.nehcmeulb.json"); break;
 
-			case "watch": watch=true; break;
+			case "watch": watch = true; break;
 
-			case "96kHz": 
-			case "48kHz": 
-			case "32kHz": samplerate = +(arg.match(/(\d+)kHz/)[1]); break; 
+			case "96kHz":
+			case "48kHz":
+			case "32kHz": samplerate = +(arg.match(/(\d+)kHz/)[1]); break;
 
 			case "block1":
 			case "block2":
@@ -485,15 +485,15 @@ function run() {
 			case "block16":
 			case "block24":
 			case "block32":
-			case "block48": 
-			case "block64": 
-			case "block96": 
+			case "block48":
+			case "block64":
+			case "block96":
 			case "block128":
 			case "block256": blocksize = +(arg.match(/block(\d+)/)[1]); break;
 
 			case "writejson":
-			case "nooled": 
-			case "boost": 
+			case "nooled":
+			case "boost":
 			case "fastmath": options[arg] = true; break;
 
 			default: {
@@ -505,13 +505,13 @@ function run() {
 				if (fs.lstatSync(arg).isDirectory()) {
 					// add a whole folder full of cpps:
 					cpps = cpps.concat(fs.readdirSync(arg)
-						.filter(s => path.parse(s).ext == ".cpp") 
+						.filter(s => path.parse(s).ext == ".cpp")
 						.map(s => path.join(arg, s))
 					)
-				} else {	
+				} else {
 					let p = path.parse(arg);
-					switch(p.ext) {
-						case ".json": {target_path = arg; target = ""}; break;
+					switch (p.ext) {
+						case ".json": { target_path = arg; target = "" }; break;
 						case ".cpp": cpps.push(arg); break;
 						// case ".gendsp":
 						// case ".maxpat":
@@ -530,7 +530,7 @@ function run() {
 		if (acc.indexOf(s) === -1) acc.push(s)
 		return acc
 	}, []);
-	cpps.sort((a,b)=>{
+	cpps.sort((a, b) => {
 		return path.basename(a) < path.basename(b) ? -1 : 0;
 	})
 
@@ -572,7 +572,7 @@ function run() {
 
 				// meta-elements are handled separately
 				if (component.meta) {
-					
+
 				} else {
 					// else it is available for gen mapping:
 
@@ -638,13 +638,13 @@ function run() {
 			patch: analyze_cpp(fs.readFileSync(cpp_path, "utf8"), hardware, cpp_path)
 		}
 	})
-	let build_name = apps.map(v=>v.patch.name).join("_")
+	let build_name = apps.map(v => v.patch.name).join("_")
 
 	// configure build path:
 	const build_path = path.join(__dirname, `build_${build_name}_${target}`)
 	console.log(`Building to ${build_path}`)
 	// ensure build path exists:
-	fs.mkdirSync(build_path, {recursive: true});
+	fs.mkdirSync(build_path, { recursive: true });
 
 	let config = {
 		build_name: build_name,
@@ -683,16 +683,17 @@ function run() {
 	}
 
 	const makefile_path = path.join(build_path, `Makefile`)
-	const bin_path = path.join(build_path, "build", build_name+".bin");
+	const bin_path = path.join(build_path, "build", build_name + ".bin");
 	const maincpp_path = path.join(build_path, `${build_name}_${target}.cpp`);
 	fs.writeFileSync(makefile_path, `
 # Project Name
 TARGET = ${build_name}
 # Sources -- note, won't work with paths with spaces
 CPP_SOURCES = ${posixify_path(path.relative(build_path, maincpp_path).replace(" ", "\\ "))}
+${target == "dpt" ? `CPP_SOURCES += ${posixify_path(path.relative(build_path, path.join(__dirname, "lib", "daisy_dpt.cpp")).replace(" ", "\\ "))}\nCPP_SOURCES += ${posixify_path(path.relative(build_path, path.join(__dirname, "lib", "dev", "DAC7554.cpp")).replace(" ", "\\ "))}\n` : ``}
 # Library Locations
 LIBDAISY_DIR = ${(posixify_path(path.relative(build_path, path.join(__dirname, "libdaisy"))).replace(" ", "\\ "))}
-${hardware.defines.OOPSY_TARGET_USES_SDMMC ? `USE_FATFS = 1`:``}
+${hardware.defines.OOPSY_TARGET_USES_SDMMC ? `USE_FATFS = 1` : ``}
 # Optimize (i.e. CFLAGS += -O3):
 OPT = -O3
 # Core location, and generic Makefile.
@@ -700,6 +701,7 @@ SYSTEM_FILES_DIR = $(LIBDAISY_DIR)/core
 include $(SYSTEM_FILES_DIR)/Makefile
 # Include the gen_dsp files
 CFLAGS+=-I"${posixify_path(path.relative(build_path, path.join(__dirname, "gen_dsp")))}"
+${target == "dpt" ? `# Include the lib directory for DPT hardware files\nCFLAGS+=-I"${posixify_path(path.relative(build_path, path.join(__dirname, "lib")))}"\n# Add vpath for DPT source files (needed because CPP_SOURCES is modified after include)\nvpath %.cpp ${posixify_path(path.relative(build_path, path.join(__dirname, "lib")))} ${posixify_path(path.relative(build_path, path.join(__dirname, "lib", "dev")))}\n` : ``}
 # Silence irritating warnings:
 CFLAGS+=-O3 -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable
 CPPFLAGS+=-O3 -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable
@@ -710,10 +712,10 @@ CPPFLAGS+=-O3 -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-var
 	console.log(`\t${maincpp_path}`)
 	console.log(`\t${makefile_path}`)
 	console.log(`\t${bin_path}`)
-	
+
 	// add watcher
 	if (watch && watchers.length < 1) {
-		watchers = cpps.map(cpp_path => fs.watch(cpp_path, (event, filepath)=>{
+		watchers = cpps.map(cpp_path => fs.watch(cpp_path, (event, filepath) => {
 			run(...args);
 		}))
 	}
@@ -742,7 +744,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 /*
 	For details of the licensing terms of code exported from gen~ see https://support.cycling74.com/hc/en-us/articles/360050779193-Gen-Code-Export-Licensing-FAQ
 */
-${Object.keys(hardware.defines).map(k=>`
+${Object.keys(hardware.defines).map(k => `
 #define ${k} (${hardware.defines[k]})`).join("")}
 ${hardware.struct}
 
@@ -763,10 +765,10 @@ oopsy::AppDef appdefs[] = {
 };
 
 int main(void) {
-	#ifdef OOPSY_TARGET_PATCH_SM
+	#if defined(OOPSY_TARGET_PATCH_SM) || defined(OOPSY_TARGET_DPT)
 	oopsy::daisy.hardware.Init(); 
 	#else
-  oopsy::daisy.hardware.Init(${options.boost|false}); 
+  oopsy::daisy.hardware.Init(${options.boost | false}); 
 	#endif
 	oopsy::daisy.hardware.SetAudioSampleRate(daisy::SaiHandle::Config::SampleRate::SAI_${hardware.samplerate}KHZ);
 	oopsy::daisy.hardware.SetAudioBlockSize(${hardware.defines.OOPSY_BLOCK_SIZE});
@@ -775,7 +777,7 @@ int main(void) {
 	return oopsy::daisy.run(appdefs, ${apps.length});
 }
 `
-	fs.writeFileSync(maincpp_path, cppcode, "utf-8");	
+	fs.writeFileSync(maincpp_path, cppcode, "utf-8");
 
 	console.log("oopsy generated code")
 
@@ -793,12 +795,12 @@ int main(void) {
 				if (line.length > 0)
 					execSync(line, { cwd: build_path }).toString()
 			})
-			console.log(`oopsy created binary ${Math.ceil(fs.statSync(posixify_path(path.join(build_path, "build", build_name+".bin")))["size"]/1024)}KB`)
+			console.log(`oopsy created binary ${Math.ceil(fs.statSync(posixify_path(path.join(build_path, "build", build_name + ".bin")))["size"] / 1024)}KB`)
 			// if successful, try to upload to hardware:
-			if (has_dfu_util && action=="upload") {
+			if (has_dfu_util && action == "upload") {
 				console.log("oopsy flashing...")
-				
-				exec(`make program-dfu`, { cwd: build_path }, (err, stdout, stderr)=>{
+
+				exec(`make program-dfu`, { cwd: build_path }, (err, stdout, stderr) => {
 					console.log("stdout", stdout)
 					console.log("stderr", stderr)
 					if (err) {
@@ -820,18 +822,18 @@ int main(void) {
 				});
 			}
 		} else {
-			exec(`export PATH=$PATH:${build_tools_path} && make clean && make`, { cwd: build_path }, (err, stdout, stderr)=>{
+			exec(`export PATH=$PATH:${build_tools_path} && make clean && make`, { cwd: build_path }, (err, stdout, stderr) => {
 				if (err) {
 					console.log("oopsy compiler error")
 					console.log(err);
 					console.log(stderr);
 					return;
 				}
-				console.log(`oopsy created binary ${Math.ceil(fs.statSync(posixify_path(path.join(build_path, "build", build_name+".bin")))["size"]/1024)}KB`)
+				console.log(`oopsy created binary ${Math.ceil(fs.statSync(posixify_path(path.join(build_path, "build", build_name + ".bin")))["size"] / 1024)}KB`)
 				// if successful, try to upload to hardware:
-				if (has_dfu_util && action=="upload") {
+				if (has_dfu_util && action == "upload") {
 					console.log("oopsy flashing...")
-					exec(`export PATH=$PATH:${build_tools_path} && make program-dfu`, { cwd: build_path }, (err, stdout, stderr)=>{
+					exec(`export PATH=$PATH:${build_tools_path} && make program-dfu`, { cwd: build_path }, (err, stdout, stderr) => {
 						console.log("stdout", stdout)
 						console.log("stderr", stderr)
 						if (err) {
@@ -886,8 +888,8 @@ function analyze_cpp(cpp, hardware, cpp_path) {
 
 		// search for history outs:
 		// i.e. any history with "_out" on its name
-		histories: (cpp.match(/t_sample\s+(m_([\w]+)_out_\d+);/gm) || []).map(s=>{
-			
+		histories: (cpp.match(/t_sample\s+(m_([\w]+)_out_\d+);/gm) || []).map(s => {
+
 			const match = /t_sample\s+(m_([\w]+)_out_\d+);/gm.exec(s);
 			let cname = match[1]
 			let name = match[2];
@@ -898,33 +900,33 @@ function analyze_cpp(cpp, hardware, cpp_path) {
 
 			// if this is a midi output, decode the features
 			let midimatch
-			if (midimatch = /midi_note(\d*)(_(pitch|vel|press|chan))?/g.exec(name) ) {
+			if (midimatch = /midi_note(\d*)(_(pitch|vel|press|chan))?/g.exec(name)) {
 				result.midi_type = "note";
 				result.midi_num = midimatch[1] !== "" && midimatch[1] !== undefined ? +midimatch[1] : 1;
 				result.midi_notetype = midimatch[3] || "pitch"
-			} else 
-			if (midimatch = /midi_(program|cc|vel|drum)(\d*)(_ch(\d+))?/g.exec(name)) {
-				result.midi_type = midimatch[1];
-				result.midi_num = midimatch[2] !== "" && midimatch[2] !== undefined ? +midimatch[2] : 1;
-				result.midi_chan = +midimatch[4] || 1;
-			} else 
-			if (midimatch = /midi_(bend|press)(_ch(\d+))?/g.exec(name)) {
-				result.midi_type = midimatch[1];
-				result.midi_chan = +midimatch[3] || 1;
-			} else 
-			if (midimatch = /midi_(clock|stop|start|continue|sense|reset)?/g.exec(name)) {
-				result.midi_type = midimatch[1];
-			} 
+			} else
+				if (midimatch = /midi_(program|cc|vel|drum)(\d*)(_ch(\d+))?/g.exec(name)) {
+					result.midi_type = midimatch[1];
+					result.midi_num = midimatch[2] !== "" && midimatch[2] !== undefined ? +midimatch[2] : 1;
+					result.midi_chan = +midimatch[4] || 1;
+				} else
+					if (midimatch = /midi_(bend|press)(_ch(\d+))?/g.exec(name)) {
+						result.midi_type = midimatch[1];
+						result.midi_chan = +midimatch[3] || 1;
+					} else
+						if (midimatch = /midi_(clock|stop|start|continue|sense|reset)?/g.exec(name)) {
+							result.midi_type = midimatch[1];
+						}
 
 			// find the initializer:
-			result.default = constexpr( new RegExp(`\\s${cname}\\s+=\\s+([^;]+);`, "gm").exec(cpp)[1] );
+			result.default = constexpr(new RegExp(`\\s${cname}\\s+=\\s+([^;]+);`, "gm").exec(cpp)[1]);
 
 			return result;
 		}),
 	}
 
 	let paramdefinitions = (cpp.match(/pi = self->__commonstate.params([^\/]+)/gm) || []);
-	paramdefinitions.forEach((s)=>{
+	paramdefinitions.forEach((s) => {
 		let type = /pi->paramtype\s+=\s+([^;]+)/gm.exec(s)[1];
 		let param = {
 			name: /pi->name\s+=\s+"([^"]+)/gm.exec(s)[1],
@@ -932,7 +934,7 @@ function analyze_cpp(cpp, hardware, cpp_path) {
 			cname: null,
 		}
 		if (type == "GENLIB_PARAMTYPE_FLOAT") {
-			param.cname = /pi->defaultvalue\s+=\s+self->([^;]+)/gm.exec(s)[1]; 
+			param.cname = /pi->defaultvalue\s+=\s+self->([^;]+)/gm.exec(s)[1];
 			param.min = +(/pi->outputmin\s+=\s+([^;]+)/gm.exec(s)[1])
 			param.max = +(/pi->outputmax\s+=\s+([^;]+)/gm.exec(s)[1])
 			//param.default = +new RegExp(`\\s${param.cname}\\s+=\\s+\\(\\(\\w+\\)([^\\)]+)`, "gm").exec(cpp)[1]
@@ -986,14 +988,14 @@ function analyze_cpp(cpp, hardware, cpp_path) {
 				let wavname
 				let wavmatch = /(\w+)_wav$/g.exec(param.name)
 				if (wavmatch) {
-					wavname = wavmatch[1]+".wav";
+					wavname = wavmatch[1] + ".wav";
 				} else {
-					let wavpath = path.join(cpp_path, "..", param.name+".wav")
+					let wavpath = path.join(cpp_path, "..", param.name + ".wav")
 					if (fs.existsSync(wavpath)) {
-						console.log(`[data ${param.name}] has possible source: ${path.resolve( wavpath )}`)
-						wavname = param.name+".wav";
+						console.log(`[data ${param.name}] has possible source: ${path.resolve(wavpath)}`)
+						wavname = param.name + ".wav";
 						//wavpath = path.resolve( wavpath )
-					} 
+					}
 				}
 				if (wavname) {
 					param.wavname = wavname
@@ -1002,7 +1004,7 @@ function analyze_cpp(cpp, hardware, cpp_path) {
 					hardware.defines.USE_FATFS = 1
 				}
 			} else {
-				console.error("failed to match details of data "+param.name)
+				console.error("failed to match details of data " + param.name)
 			}
 		}
 	})
@@ -1044,23 +1046,23 @@ function generate_daisy(hardware, nodes) {
 	}
 	let input_count = hardware.defines.OOPSY_IO_COUNT;
 	let output_count = hardware.defines.OOPSY_IO_COUNT;
-	for (let i=0; i<input_count; i++) {
-		let name = `dsy_in${i+1}`
+	for (let i = 0; i < input_count; i++) {
+		let name = `dsy_in${i + 1}`
 		nodes[name] = {
 			name: name,
 			to: [],
 		}
 		daisy.audio_ins.push(name);
 	}
-	for (let i=0; i<output_count; i++) {
-		let name = `dsy_out${i+1}`
+	for (let i = 0; i < output_count; i++) {
+		let name = `dsy_out${i + 1}`
 		nodes[name] = {
 			name: name,
 			to: [],
 		}
 		daisy.audio_outs.push(name);
 	}
-	
+
 	if (hardware.defines.OOPSY_TARGET_HAS_MIDI_INPUT) {
 		let name = `dsy_midi_in`
 		nodes[name] = {
@@ -1104,8 +1106,8 @@ function generate_app(app, hardware, target, config) {
 	app.nodes = nodes;
 	app.inserts = [];
 
-	gen.audio_ins = app.patch.ins.map((s, i)=>{
-		let name = "gen_in"+(i+1)
+	gen.audio_ins = app.patch.ins.map((s, i) => {
+		let name = "gen_in" + (i + 1)
 		let label = s.replace(/"/g, "").trim();
 		let src = null;
 		// figure out the src:
@@ -1132,13 +1134,13 @@ function generate_app(app, hardware, target, config) {
 	})
 
 
-	gen.audio_outs = app.patch.outs.map((s, i)=>{
-		let name = "gen_out"+(i+1)
+	gen.audio_outs = app.patch.outs.map((s, i) => {
+		let name = "gen_out" + (i + 1)
 		let label = s.replace(/"/g, "").trim();
 		let src = daisy.audio_outs[i];
 		if (!src) {
 			// create a glue node buffer for this:
-			src = `glue_out${i+1}`
+			src = `glue_out${i + 1}`
 			nodes[src] = {
 				// name: name,
 				// kind: "output_buffer",
@@ -1148,7 +1150,7 @@ function generate_app(app, hardware, target, config) {
 			}
 			app.audio_outs.push(src);
 		}
-		
+
 		let node = {
 			name: name,
 			// label: label,
@@ -1185,16 +1187,16 @@ function generate_app(app, hardware, target, config) {
 		return name;
 	})
 
-	gen.histories = app.patch.histories.map(history=>{
+	gen.histories = app.patch.histories.map(history => {
 		const name = history.name
-		const varname = "gen_history_"+name;
+		const varname = "gen_history_" + name;
 		let node = Object.assign({
 			varname: varname,
 		}, history);
-		
+
 		if (node.midi_type) {
 			if (node.midi_type == "note") {
-				let id = node.midi_num-1
+				let id = node.midi_num - 1
 
 				// get or create:
 				let noteout = app.midi_noteouts[id]
@@ -1213,59 +1215,59 @@ function generate_app(app, hardware, target, config) {
 				// }
 
 			} else {
-				
+
 				app.midi_outs.push(node)
-				node.setter_src = "gen."+node.cname
+				node.setter_src = "gen." + node.cname
 				if (node.midi_type == "cc") {
 					app.has_midi_out = true;
-					let statusbyte = 176+((node.midi_chan)-1)%16;
-					node.setter = `daisy.midi_message3(${statusbyte}, ${(node.midi_num)%128}, ((uint8_t)(${node.varname}*127.f)) & 0x7F);`; 
+					let statusbyte = 176 + ((node.midi_chan) - 1) % 16;
+					node.setter = `daisy.midi_message3(${statusbyte}, ${(node.midi_num) % 128}, ((uint8_t)(${node.varname}*127.f)) & 0x7F);`;
 					node.type = "float";
 					node.midi_throttle = true;
 					node.midi_only_when_changed = true;
 					nodes[name] = node
 				} else if (node.midi_type == "press") {
 					app.has_midi_out = true;
-					let statusbyte = 208+((node.midi_chan)-1)%16;
-					node.setter = `daisy.midi_message2(${statusbyte}, ((uint8_t)(${node.varname}*127.f)) & 0x7F);`; 
+					let statusbyte = 208 + ((node.midi_chan) - 1) % 16;
+					node.setter = `daisy.midi_message2(${statusbyte}, ((uint8_t)(${node.varname}*127.f)) & 0x7F);`;
 					node.type = "float";
 					node.midi_throttle = true;
 					node.midi_only_when_changed = true;
 					nodes[name] = node;
 				} else if (node.midi_type == "bend") {
 					app.has_midi_out = true;
-					let statusbyte = 224+((node.midi_chan)-1)%16;
+					let statusbyte = 224 + ((node.midi_chan) - 1) % 16;
 					let float = `((${node.varname}+1.f)*64.f)`;
 					let lsb = `((uint8_t)(${float}*128.f)) & 0x7F`;
 					let msb = `((uint8_t)${float}) & 0x7F`;
-					node.setter = `daisy.midi_message3(${statusbyte}, ${lsb}, ${msb});`; 
+					node.setter = `daisy.midi_message3(${statusbyte}, ${lsb}, ${msb});`;
 					node.type = "float";
 					node.midi_throttle = true;
 					node.midi_only_when_changed = true;
 					nodes[name] = node;
 				} else if (node.midi_type == "program") {
 					app.has_midi_out = true;
-					let statusbyte = 192+((node.midi_chan)-1)%16;
-					node.setter = `daisy.midi_message2(${statusbyte}, ${node.varname} & 0x7F);`; 
+					let statusbyte = 192 + ((node.midi_chan) - 1) % 16;
+					node.setter = `daisy.midi_message2(${statusbyte}, ${node.varname} & 0x7F);`;
 					node.type = "uint8_t";
 					nodes[name] = node;
 				} else if (node.midi_type == "drum") {
 					app.has_midi_out = true;
-					node.setter = `daisy.midi_message3(153, ${(node.midi_num)%128}, ((uint8_t)(${node.varname}*127.f)) & 0x7F);`;
+					node.setter = `daisy.midi_message3(153, ${(node.midi_num) % 128}, ((uint8_t)(${node.varname}*127.f)) & 0x7F);`;
 					node.type = "float";
-					nodes[name] = node		
+					nodes[name] = node
 				} else if (node.midi_type == "vel") {
 					app.has_midi_out = true;
-					let statusbyte = 144+((node.midi_chan)-1)%16;
-					node.setter = `daisy.midi_message3(${statusbyte}, ${(node.midi_num)%128}, ((uint8_t)(${node.varname}*127.f)) & 0x7F);`;
+					let statusbyte = 144 + ((node.midi_chan) - 1) % 16;
+					node.setter = `daisy.midi_message3(${statusbyte}, ${(node.midi_num) % 128}, ((uint8_t)(${node.varname}*127.f)) & 0x7F);`;
 					node.type = "float";
-					nodes[name] = node		
+					nodes[name] = node
 				} else if (node.midi_type == "clock"
-					 	|| node.midi_type == "stop"
-					 	|| node.midi_type == "start"
-					 	|| node.midi_type == "continue"
-					 	|| node.midi_type == "sense"
-					 	|| node.midi_type == "reset") {
+					|| node.midi_type == "stop"
+					|| node.midi_type == "start"
+					|| node.midi_type == "continue"
+					|| node.midi_type == "sense"
+					|| node.midi_type == "reset") {
 					app.has_midi_out = true;
 					if (node.midi_type == "clock") {
 						node.setter = `daisy.midi_message1(248);`;
@@ -1279,10 +1281,10 @@ function generate_app(app, hardware, target, config) {
 						node.setter = `daisy.midi_message1(254);`;
 					} else if (node.midi_type == "reset") {
 						node.setter = `daisy.midi_message1(255);`;
-					} 
+					}
 					node.type = "uint8_t";
-					nodes[name] = node		
-				} 
+					nodes[name] = node
+				}
 			}
 		} else {
 
@@ -1299,19 +1301,19 @@ function generate_app(app, hardware, target, config) {
 
 			// was this history mapped to something?
 			if (map) {
-				nodes[name] = node	
+				nodes[name] = node
 				node.type = "t_sample";
-				nodes[map].src = "gen."+node.cname; //from.push(src);
+				nodes[map].src = "gen." + node.cname; //from.push(src);
 				// nodes[src].to.push(map)
 			}
-			
+
 		}
 		return name;
 	})
 
-	gen.params = app.patch.params.map((param, i)=>{
-		const varname = "gen_param_"+param.name;
-		let src, label=param.name, type="float";
+	gen.params = app.patch.params.map((param, i) => {
+		const varname = "gen_param_" + param.name;
+		let src, label = param.name, type = "float";
 
 		let node = Object.assign({
 			varname: varname,
@@ -1329,104 +1331,104 @@ function generate_app(app, hardware, target, config) {
 		// [param midi_cc100_ch1] // input is 0..1 for cc value
 		// [param midi_cc74]	  // default channel 1
 		if (match = (/^midi_cc(\d+)(_(ch)?(\d+))?/g).exec(param.name)) {
-			let ch = match[4] ? ((+match[4])+15)%16 : null;
-			let cc = (+match[1])%128;
+			let ch = match[4] ? ((+match[4]) + 15) % 16 : null;
+			let cc = (+match[1]) % 128;
 			app.has_midi_in = true;
 			node.where = "midi_msg"
 			// need to set "src" to something to prevent this being automapped
 			src = node.where
-			node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `daisy.midi.status == ${176+ch}` : `daisy.midi.status/16 == 11`} && daisy.midi.byte[0] == ${cc}) { 
+			node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `daisy.midi.status == ${176 + ch}` : `daisy.midi.status/16 == 11`} && daisy.midi.byte[0] == ${cc}) { 
 					${node.varname} = (daisy.midi.byte[1]/127.f)*${asCppNumber(node.range)} + ${asCppNumber(node.min)};
 				}`;
-		} else 
-		if (match = (/^midi_press(_(ch)?(\d+))?/g).exec(param.name)) {
-			let ch = match[3] ? ((+match[3])+15)%16 : null;
-			app.has_midi_in = true;
-			node.where = "midi_msg"
-			// need to set "src" to something to prevent this being automapped
-			src = node.where
-			node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `daisy.midi.status == ${208+ch}` : `daisy.midi.status/16 == 13`}) { 
+		} else
+			if (match = (/^midi_press(_(ch)?(\d+))?/g).exec(param.name)) {
+				let ch = match[3] ? ((+match[3]) + 15) % 16 : null;
+				app.has_midi_in = true;
+				node.where = "midi_msg"
+				// need to set "src" to something to prevent this being automapped
+				src = node.where
+				node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `daisy.midi.status == ${208 + ch}` : `daisy.midi.status/16 == 13`}) { 
 					${node.varname} = (daisy.midi.byte[0]/127.f)*${asCppNumber(node.range)} + ${asCppNumber(node.min)};
 				}`;
-		} else 
-		if (match = (/^midi_program(_(ch)?(\d+))?/g).exec(param.name)) {
-			let ch = match[3] ? ((+match[3])+15)%16 : null;
-			app.has_midi_in = true;
-			node.where = "midi_msg"
-			// need to set "src" to something to prevent this being automapped
-			src = node.where
-			node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `daisy.midi.status == ${192+ch}` : `daisy.midi.status/16 == 12`}) { 
+			} else
+				if (match = (/^midi_program(_(ch)?(\d+))?/g).exec(param.name)) {
+					let ch = match[3] ? ((+match[3]) + 15) % 16 : null;
+					app.has_midi_in = true;
+					node.where = "midi_msg"
+					// need to set "src" to something to prevent this being automapped
+					src = node.where
+					node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `daisy.midi.status == ${192 + ch}` : `daisy.midi.status/16 == 12`}) { 
 					${node.varname} = (daisy.midi.byte[0]/127.f)*${asCppNumber(node.range)} + ${asCppNumber(node.min)};
 				}`;
-		} else 
-		if (match = (/^midi_(vel|drum)(\d+)(_(ch)?(\d+))?/g).exec(param.name)) {
-			let ch = match[5] ? ((+match[5])+15)%16 : (match[1] == "drum" ? 9 : null);
-			let note = (+match[2])%128;
-			app.has_midi_in = true;
-			node.where = "midi_msg"
-			// need to set "src" to something to prevent this being automapped
-			src = node.where
-			node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `(daisy.midi.status == ${128+ch} || daisy.midi.status == ${144+ch})` : `(daisy.midi.status/16 == 8 || daisy.midi.status/16 == 9)`} && daisy.midi.byte[0] == ${note}) { 
+				} else
+					if (match = (/^midi_(vel|drum)(\d+)(_(ch)?(\d+))?/g).exec(param.name)) {
+						let ch = match[5] ? ((+match[5]) + 15) % 16 : (match[1] == "drum" ? 9 : null);
+						let note = (+match[2]) % 128;
+						app.has_midi_in = true;
+						node.where = "midi_msg"
+						// need to set "src" to something to prevent this being automapped
+						src = node.where
+						node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `(daisy.midi.status == ${128 + ch} || daisy.midi.status == ${144 + ch})` : `(daisy.midi.status/16 == 8 || daisy.midi.status/16 == 9)`} && daisy.midi.byte[0] == ${note}) { 
 					${node.varname} = (daisy.midi.byte[1]/127.f)*${asCppNumber(node.range)} + ${asCppNumber(node.min)};
 				}`;
-		} else 
-		if (match = (/^midi_bend(_(ch)?(\d+))?/g).exec(param.name)) {
-			let ch = match[3] ? ((+match[3])+15)%16 : null;
-			app.has_midi_in = true;
-			node.where = "midi_msg"
-			// need to set "src" to something to prevent this being automapped
-			src = node.where
-			node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `daisy.midi.status == ${224+ch}` : `daisy.midi.status/16 == 14`}) { 
+					} else
+						if (match = (/^midi_bend(_(ch)?(\d+))?/g).exec(param.name)) {
+							let ch = match[3] ? ((+match[3]) + 15) % 16 : null;
+							app.has_midi_in = true;
+							node.where = "midi_msg"
+							// need to set "src" to something to prevent this being automapped
+							src = node.where
+							node.code = `if (daisy.midi.lastbyte == 1 && ${ch != null ? `daisy.midi.status == ${224 + ch}` : `daisy.midi.status/16 == 14`}) { 
 					${node.varname} = ((daisy.midi.byte[0] + daisy.midi.byte[1]/128.f)/128.f)*${asCppNumber(node.range)} + ${asCppNumber(node.min)};
 				}`;
-		} else 
-		if (param.name == "midi_clock") {
-			app.has_midi_in = true;
-			node.where = "midi_status"
-			// need to set "src" to something to prevent this being automapped
-			src = node.where
-			node.code = `if (byte == 248) { 
+						} else
+							if (param.name == "midi_clock") {
+								app.has_midi_in = true;
+								node.where = "midi_status"
+								// need to set "src" to something to prevent this being automapped
+								src = node.where
+								node.code = `if (byte == 248) { 
 					${node.varname} = 1.f;
 				}`;
-			// reset:
-			app.inserts.push({
-				where: "post_audio",
-				code: `${node.varname} = 0.f;`
-			})
-		} else if (param.name == "midi_play") {
-			app.has_midi_in = true;
-			node.where = "midi_status"
-			// need to set "src" to something to prevent this being automapped
-			src = node.where
-			node.code = `if (byte == 250 || byte == 251) { 
+								// reset:
+								app.inserts.push({
+									where: "post_audio",
+									code: `${node.varname} = 0.f;`
+								})
+							} else if (param.name == "midi_play") {
+								app.has_midi_in = true;
+								node.where = "midi_status"
+								// need to set "src" to something to prevent this being automapped
+								src = node.where
+								node.code = `if (byte == 250 || byte == 251) { 
 					${node.varname} = 1.f;
 				} else if (byte == 252) { 
 					${node.varname} = 0.f;
 				}`;
-			// reset:
-			app.inserts.push({
-				where: "post_audio",
-				code: `${node.varname} = 0.f;`
-			})
-		} else {
-			// search for a matching [out] name / prefix:
-			Object.keys(hardware.labels.params).sort().forEach(k => {
-				if (match = new RegExp(`^${k}_?(.+)?`).exec(param.name)) {
-					src = hardware.labels.params[k];
-					label = match[1] || param.name
+								// reset:
+								app.inserts.push({
+									where: "post_audio",
+									code: `${node.varname} = 0.f;`
+								})
+							} else {
+								// search for a matching [out] name / prefix:
+								Object.keys(hardware.labels.params).sort().forEach(k => {
+									if (match = new RegExp(`^${k}_?(.+)?`).exec(param.name)) {
+										src = hardware.labels.params[k];
+										label = match[1] || param.name
 
-					// search for any type qualifiers:
-					//if (match = label.match(/^((.+)_)?(int|bool)(_(.*))?$/)) {
-					if (match = label.match(/^(int|bool)(_(.*))?$/)) {
-						//type = match[3];
-						type = match[1]
-						// trim type from label:
-						//label = (match[2] || "") + (match[5] || "") 
-						label = match[3] || label
-					}
-				}
-			})
-		}
+										// search for any type qualifiers:
+										//if (match = label.match(/^((.+)_)?(int|bool)(_(.*))?$/)) {
+										if (match = label.match(/^(int|bool)(_(.*))?$/)) {
+											//type = match[3];
+											type = match[1]
+											// trim type from label:
+											//label = (match[2] || "") + (match[5] || "") 
+											label = match[3] || label
+										}
+									}
+								})
+							}
 
 		node.type = type;
 		node.src = src;
@@ -1440,19 +1442,19 @@ function generate_app(app, hardware, target, config) {
 			if (node.range > 2 && Number.isInteger(node.max) && Number.isInteger(node.max) && Number.isInteger(node.default)) {
 				if (node.range < 10) {
 					// might be v/oct
-					node.stepsize = 1/12
+					node.stepsize = 1 / 12
 				} else {
 					// find a suitable subdivision:
 					let power = Math.round(Math.log2(node.range / ideal_steps))
 					node.stepsize = Math.pow(2, power)
 				}
-			} 
+			}
 		}
 		if (!node.stepsize) {
 			// general case:
 			node.stepsize = node.range / ideal_steps
 		}
-		
+
 		nodes[varname] = node;
 		if (src && nodes[src]) {
 			nodes[src].to.push(varname)
@@ -1460,8 +1462,8 @@ function generate_app(app, hardware, target, config) {
 		return varname;
 	})
 
-	gen.datas = app.patch.datas.map((param, i)=>{
-		const varname = "gen_data_"+param.name;
+	gen.datas = app.patch.datas.map((param, i) => {
+		const varname = "gen_data_" + param.name;
 		let src, label;
 		// search for a matching [out] name / prefix:
 		Object.keys(hardware.labels.datas).sort().forEach(k => {
@@ -1497,7 +1499,7 @@ function generate_app(app, hardware, target, config) {
 
 	// fill all my holes
 	// map unused cvs/knobs to unmapped params?
-	let upi=0; // unused param index
+	let upi = 0; // unused param index
 	let param = gen.params[upi];
 	Object.keys(hardware.inputs).forEach(name => {
 		const node = nodes[name];
@@ -1516,7 +1518,7 @@ function generate_app(app, hardware, target, config) {
 	// normal any audio outs from earlier (non cv/gate/midi) audio outs
 	{
 		let available = []
-		daisy.audio_outs.forEach((name, i)=>{
+		daisy.audio_outs.forEach((name, i) => {
 			const node = nodes[name];
 			// does this output have an audio source?
 			if (node.src) {
@@ -1531,23 +1533,23 @@ function generate_app(app, hardware, target, config) {
 
 struct App_${name} : public oopsy::App<App_${name}> {
 	${gen.params
-		.map(name=>`
+			.map(name => `
 	${nodes[name].type} ${name};`).join("")}
-	${app.midi_noteouts.map(note=>`
+	${app.midi_noteouts.map(note => `
 	oopsy::GenDaisy::MidiNote ${note.cname};`).join("")}
-	${gen.histories.map(name=>nodes[name]).filter(node => node && node.midi_type).map(node=>`
+	${gen.histories.map(name => nodes[name]).filter(node => node && node.midi_type).map(node => `
 	${node.type} ${node.varname};`).join("")}
-	${gen.audio_outs.map(name=>nodes[name]).filter(node => node && node.midi_type).map(node=>`
+	${gen.audio_outs.map(name => nodes[name]).filter(node => node && node.midi_type).map(node => `
 	${node.type} ${node.varname};`).join("")}
 	${daisy.device_outs.map(name => nodes[name])
-		.filter(node => node.src || node.from.length)
-		.map(node=>`
+			.filter(node => node.src || node.from.length)
+			.map(node => `
 	float ${node.name};`).join("")}
-	${app.audio_outs.map(name=>`
+	${app.audio_outs.map(name => `
 	float ${name}[OOPSY_BLOCK_SIZE];`).join("")}
 	
 	void init(oopsy::GenDaisy& daisy) {
-		#ifdef OOPSY_TARGET_PATCH_SM
+		#if defined(OOPSY_TARGET_PATCH_SM) || defined(OOPSY_TARGET_DPT)
 		daisy.gen = ${name}::create(daisy.hardware.AudioSampleRate(), daisy.hardware.AudioBlockSize());
 		#else
 		daisy.gen = ${name}::create(daisy.hardware.seed.AudioSampleRate(), daisy.hardware.seed.AudioBlockSize());
@@ -1555,24 +1557,24 @@ struct App_${name} : public oopsy::App<App_${name}> {
 		${name}::State& gen = *(${name}::State *)daisy.gen;
 		
 		daisy.param_count = ${gen.params.length};
-		${(defines.OOPSY_HAS_PARAM_VIEW) ? `daisy.param_selected = ${Math.max(0, gen.params.map(name=>nodes[name].src).indexOf(undefined))};`:``}
-		${gen.params.map(name=>nodes[name])
-			.map(node=>`
+		${(defines.OOPSY_HAS_PARAM_VIEW) ? `daisy.param_selected = ${Math.max(0, gen.params.map(name => nodes[name].src).indexOf(undefined))};` : ``}
+		${gen.params.map(name => nodes[name])
+			.map(node => `
 		${node.varname} = ${asCppNumber(node.default, node.type)};`).join("")}
 		${daisy.device_outs.map(name => nodes[name])
 			.filter(node => node.src || node.from.length)
-			.map(node=>`
+			.map(node => `
 		${node.name} = 0.f;`).join("")}
-		${gen.histories.map(name=>nodes[name]).filter(node => node && node.midi_type).map(node=>`
+		${gen.histories.map(name => nodes[name]).filter(node => node && node.midi_type).map(node => `
 		${node.varname} = ${asCppNumber(node.default, node.type)};`).join("")}
 		${daisy.datahandlers.map(name => nodes[name])
 			.filter(node => node.init)
 			.filter(node => node.data)
-			.map(node =>`
+			.map(node => `
 		${interpolate(node.init, node)};`).join("")}
-		${gen.datas.map(name=>nodes[name])
+		${gen.datas.map(name => nodes[name])
 			.filter(node => node.wavname)
-			.map(node=>`
+			.map(node => `
 		daisy.sdcard_load_wav("${node.wavname}", gen.${node.cname});`).join("")}
 	}
 
@@ -1583,84 +1585,84 @@ struct App_${name} : public oopsy::App<App_${name}> {
 		${daisy.device_inputs.map(name => nodes[name])
 			.filter(node => node.to.length)
 			.filter(node => node.update && node.update.where == "audio")
-			.map(node=>`
+			.map(node => `
 		${interpolate(node.update.code, node)};`).join("")}
 		${daisy.device_inputs.map(name => nodes[name])
 			.filter(node => node.to.length)
-			.map(node=>`
+			.map(node => `
 		float ${node.name} = ${node.code};`).join("")}
 		${gen.params
-			.map(name=>nodes[name])
+			.map(name => nodes[name])
 			.filter(node => node.src)
 			.filter(node => node.where == "audio" || node.where == undefined)
-			.map(node=>`
+			.map(node => `
 		${node.varname} = (${node.type})(${node.src}*${asCppNumber(node.range)} + ${asCppNumber(node.min + (node.type == "int" || node.type == "bool" ? 0.5 : 0))});`).join("")}
 		${gen.params
-			.map(name=>nodes[name])
-			.map(node=>`
+			.map(name => nodes[name])
+			.map(node => `
 		gen.set_${node.name}(${node.varname});`).join("")}
-		${daisy.audio_ins.map((name, i)=>`
+		${daisy.audio_ins.map((name, i) => `
 		float * ${name} = (float *)hardware_ins[${i}];`).join("")}
-		${daisy.audio_outs.map((name, i)=>`
+		${daisy.audio_outs.map((name, i) => `
 		float * ${name} = hardware_outs[${i}];`).join("")}
-		${app.has_midi_in ? daisy.midi_ins.map(name=>`
+		${app.has_midi_in ? daisy.midi_ins.map(name => `
 		float * ${name} = daisy.midi_in_data;`).join("") : ''}
-		// ${gen.audio_ins.map(name=>nodes[name].label).join(", ")}:
-		float * inputs[] = { ${gen.audio_ins.map(name=>nodes[name].src).join(", ")} }; 
-		// ${gen.audio_outs.map(name=>nodes[name].label).join(", ")}:
-		float * outputs[] = { ${gen.audio_outs.map(name=>nodes[name].src).join(", ")} };
+		// ${gen.audio_ins.map(name => nodes[name].label).join(", ")}:
+		float * inputs[] = { ${gen.audio_ins.map(name => nodes[name].src).join(", ")} }; 
+		// ${gen.audio_outs.map(name => nodes[name].label).join(", ")}:
+		float * outputs[] = { ${gen.audio_outs.map(name => nodes[name].src).join(", ")} };
 		gen.perform(inputs, outputs, size);
 		${daisy.device_outs.map(name => nodes[name])
 			.filter(node => node.src || node.from.length)
 			.map(node => node.src ? `
 		${node.name} = ${node.src};` : `
-		${node.name} = ${node.from.map(name=>name+"[ size-1]").join(" + ")}; // device out`).join("")}
+		${node.name} = ${node.from.map(name => name + "[ size-1]").join(" + ")}; // device out`).join("")}
 		${daisy.device_outs.map(name => nodes[name])
 			.filter(node => node.src || node.from.length)
 			.filter(node => node.config.where == "audio")
-			.map(node=>`
+			.map(node => `
 		${interpolate(node.config.code, node)} // set out`).join("")}
 		${daisy.datahandlers.map(name => nodes[name])
 			.filter(node => node.where == "audio")
 			.filter(node => node.data)
-			.map(node =>`
+			.map(node => `
 		${interpolate(node.code, node)} // data out`).join("")}
 		${app.midi_outs
-			.filter(node=>!node.midi_throttle)
-			.map(node=>`
+			.filter(node => !node.midi_throttle)
+			.map(node => `
 		if (${node.varname} != (${node.type})${node.setter_src}) {
 			${node.varname} = ${node.setter_src};
 			${node.setter}
 		}`).join("")}		
 		${app.midi_noteouts
-			.filter(note=>note.vel && note.pitch)
-			.map(note=>`
+			.filter(note => note.vel && note.pitch)
+			.map(note => `
 		${note.cname}.update(daisy, 
 			((uint8_t)(gen.${note.vel.cname}*127.f)) & 0x7F, 
 			((uint8_t)gen.${note.pitch.cname}) & 0x7F, 
 			${note.chan ? `((uint8_t)(gen.${note.chan.cname})-1) % 16` : "0"});`).join("")}
-		// msgs: ${(app.midi_outs.filter(node=>node.midi_throttle).length + app.midi_noteouts.filter(note=>note.press).length)}
-		// rate: ${hardware.defines.OOPSY_BLOCK_RATE/500}
-		${(app.midi_outs.filter(node=>node.midi_throttle).length + app.midi_noteouts.filter(note=>note.press).length) > 0 ? `
-		if (daisy.blockcount % ${ Math.ceil((app.midi_outs.filter(node=>node.midi_throttle).length + app.midi_noteouts
-			.filter(note=>note.press).length) * hardware.defines.OOPSY_BLOCK_RATE/500)} == 0){ // throttle output for MIDI baud limits
+		// msgs: ${(app.midi_outs.filter(node => node.midi_throttle).length + app.midi_noteouts.filter(note => note.press).length)}
+		// rate: ${hardware.defines.OOPSY_BLOCK_RATE / 500}
+		${(app.midi_outs.filter(node => node.midi_throttle).length + app.midi_noteouts.filter(note => note.press).length) > 0 ? `
+		if (daisy.blockcount % ${Math.ceil((app.midi_outs.filter(node => node.midi_throttle).length + app.midi_noteouts
+				.filter(note => note.press).length) * hardware.defines.OOPSY_BLOCK_RATE / 500)} == 0){ // throttle output for MIDI baud limits
 			${app.midi_outs
-				.filter(node=>node.midi_throttle)
-				.map(node=>`
+				.filter(node => node.midi_throttle)
+				.map(node => `
 			${node.midi_only_when_changed ? `if (${node.varname} != (${node.type})${node.setter_src}) {` : `{`}
 				${node.varname} = ${node.setter_src};
 				${node.setter}
 			}`).join("")}
 			${app.midi_noteouts
-				.filter(note=>note.press)
-				.map(note=>`
+				.filter(note => note.press)
+				.map(note => `
 			${note.cname}.update_pressure(daisy, ((uint8_t)gen.${note.press.cname}) & 0x7F);`).join("")}
 		}` : ''}
-		${app.has_midi_out ? daisy.midi_outs.map(name=>nodes[name].from.map(name=>`
+		${app.has_midi_out ? daisy.midi_outs.map(name => nodes[name].from.map(name => `
 		daisy.midi_postperform(${name}, size);`).join("")).join("") : ''}
-		${daisy.audio_outs.map(name=>nodes[name])
+		${daisy.audio_outs.map(name => nodes[name])
 			.filter(node => node.src != node.name)
-			.map(node=>node.src ? `
+			.map(node => node.src ? `
 		memcpy(${node.name}, ${node.src}, sizeof(float)*size);` : `
 		memset(${node.name}, 0, sizeof(float)*size);`).join("")}
 		${app.inserts.concat(hardware.inserts).filter(o => o.where == "post_audio").map(o => o.code).join("\n\t")}
@@ -1674,21 +1676,21 @@ struct App_${name} : public oopsy::App<App_${name}> {
 		${daisy.datahandlers.map(name => nodes[name])
 			.filter(node => node.where == "main")
 			.filter(node => node.data)
-			.map(node =>`
+			.map(node => `
 		${interpolate(node.code, node)}`).join("")}
 		${daisy.device_outs.map(name => nodes[name])
 			.filter(node => node.src || node.from.length)
 			.filter(node => node.config.where == "main")
-			.map(node=>`
+			.map(node => `
 		${interpolate(node.config.code, node)}`).join("")}
 		${defines.OOPSY_TARGET_USES_MIDI_UART ? `
 		while(daisy.uart.Readable()) {
 			uint8_t byte = daisy.uart.PopRx();
 			if (byte >= 128) { // status byte
 				${gen.params
-				.map(name=>nodes[name])
+				.map(name => nodes[name])
 				.filter(node => node.where == "midi_status")
-				.map(node=>node.code)
+				.map(node => node.code)
 				.concat(`if (byte == 0xFF) { // reset event -> go to bootloader
 					daisy.log("reboot");
 					daisy::System::ResetToBootloader();
@@ -1702,14 +1704,14 @@ struct App_${name} : public oopsy::App<App_${name}> {
 				daisy.midi.lastbyte = !daisy.midi.lastbyte; 
 				daisy.midi.byte[daisy.midi.lastbyte] = byte;
 				${gen.params
-					.map(name=>nodes[name])
-					.filter(node => node.where == "midi_msg")
-					.map(node=>node.code)
-					.concat(defines.OOPSY_MULTI_APP ? `
+				.map(name => nodes[name])
+				.filter(node => node.where == "midi_msg")
+				.map(node => node.code)
+				.concat(defines.OOPSY_MULTI_APP ? `
 					if (daisy.midi.status/16 == 12) { // program change -> app change
 						daisy.schedule_app_load(daisy.midi.byte[daisy.midi.lastbyte]);
-					}`:[])
-					.join(" else ")}
+					}`: [])
+				.join(" else ")}
 			}
 			${app.has_generic_midi_in ? `
 			${app.has_generic_midi_thru ? `daisy.midi_message1(byte); // thru` : ``}
@@ -1729,12 +1731,12 @@ struct App_${name} : public oopsy::App<App_${name}> {
 		${daisy.datahandlers.map(name => nodes[name])
 			.filter(node => node.where == "display")
 			.filter(node => node.data)
-			.map(node =>`
+			.map(node => `
 		${interpolate(node.code, node)}`).join("")}
 		${daisy.device_outs.map(name => nodes[name])
 			.filter(node => node.src || node.from.length)
 			.filter(node => node.config.where == "display")
-			.map(node=>`
+			.map(node => `
 		${interpolate(node.config.code, node)}`).join("")}
 		${hardware.defines.OOPSY_TARGET_SEED ? "hardware.Display();" : ""}
 	}
@@ -1743,8 +1745,8 @@ struct App_${name} : public oopsy::App<App_${name}> {
 	float setparam(int idx, float val) {
 		switch(idx) {
 			${gen.params
-				.map(name=>nodes[name])
-				.map((node, i)=>`
+				.map(name => nodes[name])
+				.map((node, i) => `
 			case ${i}: return ${node.varname} = (${node.type})(val > ${asCppNumber(node.max, node.type)}) ? ${asCppNumber(node.max, node.type)} : (val < ${asCppNumber(node.min, node.type)}) ? ${asCppNumber(node.min, node.type)} : val;`).join("")}
 		}
 		return 0.f;	
@@ -1752,14 +1754,14 @@ struct App_${name} : public oopsy::App<App_${name}> {
 
 	${defines.OOPSY_TARGET_HAS_OLED && defines.OOPSY_HAS_PARAM_VIEW ? `
 	void paramCallback(oopsy::GenDaisy& daisy, int idx, char * label, int len, bool tweak) {
-		switch(idx) { ${gen.params.map(name=>nodes[name]).map((node, i)=>`
+		switch(idx) { ${gen.params.map(name => nodes[name]).map((node, i) => `
 		case ${i}: ${defines.OOPSY_CAN_PARAM_TWEAK ? `
 		if (tweak) setparam(${i}, ${node.varname} + daisy.menu_button_incr ${node.type == "float" ? '* ' + asCppNumber(node.stepsize, node.type) : ""});` : ""}
-		${defines.OOPSY_OLED_DISPLAY_WIDTH < 128 ? `snprintf(label, len, "${node.label.substring(0,5).padEnd(5," ")}" FLT_FMT3 "", FLT_VAR3(${node.varname}) );` : `snprintf(label, len, "${node.src ? 
-			`${node.src.substring(0,3).padEnd(3," ")} ${node.label.substring(0,11).padEnd(11," ")}" FLT_FMT3 ""` 
-			: 
-			`%s ${node.label.substring(0,11).padEnd(11," ")}" FLT_FMT3 "", (daisy.param_is_tweaking && ${i} == daisy.param_selected) ? "enc" : "   "`
-			}, FLT_VAR3(${node.varname}) );`}
+		${defines.OOPSY_OLED_DISPLAY_WIDTH < 128 ? `snprintf(label, len, "${node.label.substring(0, 5).padEnd(5, " ")}" FLT_FMT3 "", FLT_VAR3(${node.varname}) );` : `snprintf(label, len, "${node.src ?
+						`${node.src.substring(0, 3).padEnd(3, " ")} ${node.label.substring(0, 11).padEnd(11, " ")}" FLT_FMT3 ""`
+						:
+						`%s ${node.label.substring(0, 11).padEnd(11, " ")}" FLT_FMT3 "", (daisy.param_is_tweaking && ${i} == daisy.param_selected) ? "enc" : "   "`
+						}, FLT_VAR3(${node.varname}) );`}
 		break;`).join("")}
 		}	
 	}

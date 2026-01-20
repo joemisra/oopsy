@@ -149,7 +149,7 @@ namespace oopsy {
 	struct GenDaisy {
 
 		Daisy hardware;
-		#ifdef OOPSY_TARGET_PATCH_SM
+		#if defined(OOPSY_TARGET_PATCH_SM) || defined(OOPSY_TARGET_DPT)
 		Daisy *sub_board = &hardware;
 		#else
 		daisy::DaisySeed *sub_board = &hardware.seed;
