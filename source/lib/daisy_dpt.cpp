@@ -157,10 +157,10 @@ namespace dpt
 
         static void InternalDacCallback(uint16_t **output, size_t size);
 
-        /** Based on a 0-5V output with a 0-4095 12-bit DAC */
+        /** Based on a -7V to +7V bipolar output with a 0-4095 12-bit DAC (inverted) */
         static inline uint16_t VoltageToCode(float input)
         {
-            float pre = (input + 5.0f) * 273.f;
+            float pre = abs(((input + 7.f) / 14.f * 4095.f) - 4095.f);
             if(pre > 4095.f)
                 pre = 4095.f;
             else if(pre < 0.f)
@@ -338,11 +338,9 @@ namespace dpt
 
         /** Fixed-function Digital I/O */
         user_led.Init(PIN_USER_LED, GPIO::Mode::OUTPUT, GPIO::Pull::NOPULL);
-        // Convert Pin to dsy_gpio_pin for compatibility with older libDaisy API
-        static dsy_gpio_pin gate_in_1_pin = static_cast<dsy_gpio_pin>(B10);
-        static dsy_gpio_pin gate_in_2_pin = static_cast<dsy_gpio_pin>(B9);
-        gate_in_1.Init(&gate_in_1_pin);
-        gate_in_2.Init(&gate_in_2_pin);
+        // libdaisy v4: GateIn::Init takes dsy_gpio_pin*, needs cast from Pin
+        gate_in_1.Init((dsy_gpio_pin *)&B10);
+        gate_in_2.Init((dsy_gpio_pin *)&B9);
 
         gate_out_1.Init(B6, GPIO::Mode::OUTPUT, GPIO::Pull::NOPULL);
         gate_out_2.Init(B5, GPIO::Mode::OUTPUT, GPIO::Pull::NOPULL);
@@ -369,31 +367,10 @@ namespace dpt
     }
 
     void DPT::InitTimer(daisy::dpt_internal::PeriodElapsedCallback cb, void *data) {
-        // Note: TimerHandle::SetCallback and Config::enable_irq are not available in libDaisy v4.0.0
-        // This function is provided for API compatibility but may not work in Oopsy builds
-        // TODO: Implement timer callback setup when libDaisy version supports it
-        (void)cb;  // Suppress unused parameter warning
-        (void)data; // Suppress unused parameter warning
-        
-        // For v4.0.0 compatibility, timer functionality is stubbed out
-        // The timer can be initialized but callbacks cannot be set
-        /*
-        daisy::TimerHandle tim5_;
-        daisy::TimerHandle::Config timcfg;
-        uint32_t target_freq;
-        target_freq = 48000;
-        timcfg.periph = daisy::TimerHandle::Config::Peripheral::TIM_5;
-        timcfg.dir = daisy::TimerHandle::Config::CounterDir::UP;
-        auto tim_base_freq = daisy::System::GetPClk2Freq();
-        auto tim_target_freq = target_freq;
-        auto tim_period = tim_base_freq / tim_target_freq;
-        timcfg.period = tim_period;
-        timcfg.enable_irq = true;  // Not available in v4.0.0
-        tim5_.Init(timcfg);
-        HAL_NVIC_SetPriority(TIM5_IRQn, 0x0, 0x0);
-        tim5_.SetCallback(cb, data);  // Not available in v4.0.0
-        tim5_.Start();
-        */
+        // libdaisy v4: TimerHandle doesn't have PeriodElapsedCallback, enable_irq, or SetCallback
+        // Timer callbacks are not supported in this version - stub out for API compatibility
+        (void)cb;
+        (void)data;
 
         //TIM5->PSC = 1;
         //TIM5->DIER = TIM_DIER_UIE;
@@ -519,10 +496,8 @@ namespace dpt
 
     void DPT::StartDacExp(DacHandle::DacCallback callback)
     {
-        // StartDacExp is for the external DAC7554 expander
-        // For now, this is a no-op since DAC7554 updates are handled via WriteCvOutExp
-        // The callback parameter is not used for DAC7554 (it uses SPI DMA instead)
-        (void)callback; // Suppress unused parameter warning
+        // Stub for Oopsy compatibility - delegates to StartDac
+        StartDac(callback);
     }
 
     void DPT::StopDac() { pimpl_->StopDac(); }

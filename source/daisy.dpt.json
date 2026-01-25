@@ -9,188 +9,150 @@
     "OOPSY_TARGET_HAS_MIDI_OUTPUT": 1,
     "OOPSY_TARGET_HAS_GATE_INPUT": 1,
     "OOPSY_TARGET_HAS_GATE_OUTPUT": 1,
-    "OOPSY_TARGET_HAS_EXTERNAL_DAC": 1
+    "OOPSY_TARGET_HAS_EXTERNAL_DAC": 1,
+    "OOPSY_IO_COUNT": 2
   },
 
   "inserts": [
-    {
-      "where": "header",
-      "code": "#include \"daisy_dpt.h\""
-    },
-    {
-      "where": "header",
-      "code": "typedef daisy::dpt::DPT Daisy;"
-    },
-    {
-      "where": "init",
-      "code": "oopsy::daisy.hardware.InitMidi();"
-    },
-    {
-      "where": "init",
-      "code": "oopsy::daisy.hardware.midi.StartReceive();"
-    },
-    {
-      "where": "init",
-      "code": "oopsy::daisy.hardware.StartDacExp(nullptr);"
-    },
-    {
-      "where": "header",
-      "code": "static float dac7554_cv3 = 0.f, dac7554_cv4 = 0.f, dac7554_cv5 = 0.f, dac7554_cv6 = 0.f;"
-    }
+    { "where": "header", "code": "#include \"daisy_dpt.h\"" },
+    { "where": "header", "code": "typedef daisy::dpt::DPT Daisy;" },
+    { "where": "header", "code": "static float dac7554_cv3 = 0.f, dac7554_cv4 = 0.f, dac7554_cv5 = 0.f, dac7554_cv6 = 0.f;" },
+    { "where": "init", "code": "oopsy::daisy.hardware.InitMidi();" },
+    { "where": "init", "code": "oopsy::daisy.hardware.midi.StartReceive();" },
+    { "where": "init", "code": "oopsy::daisy.hardware.StartDacExp(nullptr);" }
   ],
 
+  "labels": {
+    "params": {
+      "cv1": "cv1",
+      "cv2": "cv2",
+      "cv3": "cv3",
+      "cv4": "cv4",
+      "cv5": "cv5",
+      "cv6": "cv6",
+      "cv7": "cv7",
+      "cv8": "cv8",
+      "gate1": "gate1",
+      "gate2": "gate2",
+      "gate": "gate1",
+      "cv": "cv1",
+      "knob1": "cv1",
+      "knob2": "cv2",
+      "knob3": "cv3",
+      "knob4": "cv4"
+    },
+    "outs": {
+      "cvout1": "cvout1",
+      "cvout2": "cvout2",
+      "cvout3": "cvout3",
+      "cvout4": "cvout4",
+      "cvout5": "cvout5",
+      "cvout6": "cvout6",
+      "cv1": "cvout1",
+      "cv2": "cvout2",
+      "cv3": "cvout3",
+      "cv4": "cvout4",
+      "cv5": "cvout5",
+      "cv6": "cvout6",
+      "out3": "cvout3",
+      "out4": "cvout4",
+      "out5": "cvout5",
+      "out6": "cvout6",
+      "out7": "cvout1",
+      "out8": "cvout2",
+      "gateout1": "gateout1",
+      "gateout2": "gateout2",
+      "gate1": "gateout1",
+      "gate2": "gateout2",
+      "gate": "gateout1",
+      "led": "cvout1"
+    },
+    "datas": {}
+  },
+
   "inputs": {
-    "in 1": {
-      "code": "IN_L[i]"
-    },
-    "in 2": {
-      "code": "IN_R[i]"
-    },
-    "in 3": {
-      "code": "IN_L[i]"
-    },
-    "in 4": {
-      "code": "IN_R[i]"
-    },
-    "param cv1": {
+    "cv1": {
+      "automap": true,
       "code": "hardware.GetAdcValue(daisy::dpt::CV_1)"
     },
-    "param cv2": {
+    "cv2": {
+      "automap": true,
       "code": "hardware.GetAdcValue(daisy::dpt::CV_2)"
     },
-    "param cv3": {
+    "cv3": {
+      "automap": true,
       "code": "hardware.GetAdcValue(daisy::dpt::CV_3)"
     },
-    "param cv4": {
+    "cv4": {
+      "automap": true,
       "code": "hardware.GetAdcValue(daisy::dpt::CV_4)"
     },
-    "param cv5": {
+    "cv5": {
+      "automap": true,
       "code": "hardware.GetAdcValue(daisy::dpt::CV_5)"
     },
-    "param cv6": {
+    "cv6": {
+      "automap": true,
       "code": "hardware.GetAdcValue(daisy::dpt::CV_6)"
     },
-    "param cv7": {
+    "cv7": {
+      "automap": true,
       "code": "hardware.GetAdcValue(daisy::dpt::CV_7)"
     },
-    "param cv8": {
+    "cv8": {
+      "automap": true,
       "code": "hardware.GetAdcValue(daisy::dpt::CV_8)"
     },
-    "param gate1": {
+    "gate1": {
       "code": "(hardware.gate_in_1.State() ? 1.f : 0.f)"
     },
-    "param gate2": {
+    "gate2": {
       "code": "(hardware.gate_in_2.State() ? 1.f : 0.f)"
     }
   },
 
   "outputs": {
-    "out 1": {
-      "where": "audio",
-      "code": "OUT_L[i] = $;"
+    "cvout1": {
+      "where": "main",
+      "code": "hardware.WriteCvOut(daisy::dpt::CV_OUT_1, $<name> * 7.f, false);"
     },
-    "out 2": {
-      "where": "audio",
-      "code": "OUT_R[i] = $;"
+    "cvout2": {
+      "where": "main",
+      "code": "hardware.WriteCvOut(daisy::dpt::CV_OUT_2, $<name> * 7.f, false);"
     },
-    "out 3": {
-      "where": "audio",
-      "code": "OUT_L[i] = $;"
+    "cvout3": {
+      "where": "main",
+      "code": "extern float dac7554_cv3; dac7554_cv3 = $<name> * 7.f;"
     },
-    "out 4": {
-      "where": "audio",
-      "code": "OUT_R[i] = $;"
+    "cvout4": {
+      "where": "main",
+      "code": "extern float dac7554_cv4; dac7554_cv4 = $<name> * 7.f;"
     },
-    "out 1 cv1": {
-      "where": "audio",
-      "code": "hardware.WriteCvOut(daisy::dpt::CV_OUT_1, ($ + 1.f) * 2.5f, false);"
+    "cvout5": {
+      "where": "main",
+      "code": "extern float dac7554_cv5; dac7554_cv5 = $<name> * 7.f;"
     },
-    "out 1 cv2": {
-      "where": "audio",
-      "code": "hardware.WriteCvOut(daisy::dpt::CV_OUT_2, ($ + 1.f) * 2.5f, false);"
+    "cvout6": {
+      "where": "main",
+      "code": "extern float dac7554_cv3, dac7554_cv4, dac7554_cv5, dac7554_cv6; dac7554_cv6 = $<name> * 7.f; hardware.WriteCvOutExp(dac7554_cv3, dac7554_cv4, dac7554_cv5, dac7554_cv6, false);"
     },
-    "out 2 cv1": {
+    "gateout1": {
       "where": "audio",
-      "code": "hardware.WriteCvOut(daisy::dpt::CV_OUT_1, ($ + 1.f) * 2.5f, false);"
+      "code": "hardware.gate_out_1.Write($<name> > 0.f);"
     },
-    "out 2 cv2": {
+    "gateout2": {
       "where": "audio",
-      "code": "hardware.WriteCvOut(daisy::dpt::CV_OUT_2, ($ + 1.f) * 2.5f, false);"
-    },
-    "out 1 cv3": {
-      "where": "audio",
-      "code": "extern float dac7554_cv3, dac7554_cv4, dac7554_cv5, dac7554_cv6; dac7554_cv3 = $ * 7.f; if(i == size - 1) { hardware.WriteCvOutExp(dac7554_cv3, dac7554_cv4, dac7554_cv5, dac7554_cv6, false); }"
-    },
-    "out 1 cv4": {
-      "where": "audio",
-      "code": "extern float dac7554_cv4; dac7554_cv4 = $ * 7.f;"
-    },
-    "out 1 cv5": {
-      "where": "audio",
-      "code": "extern float dac7554_cv5; dac7554_cv5 = $ * 7.f;"
-    },
-    "out 1 cv6": {
-      "where": "audio",
-      "code": "extern float dac7554_cv6; dac7554_cv6 = $ * 7.f;"
-    },
-    "out 2 cv3": {
-      "where": "audio",
-      "code": "extern float dac7554_cv3, dac7554_cv4, dac7554_cv5, dac7554_cv6; dac7554_cv3 = $ * 7.f; if(i == size - 1) { hardware.WriteCvOutExp(dac7554_cv3, dac7554_cv4, dac7554_cv5, dac7554_cv6, false); }"
-    },
-    "out 2 cv4": {
-      "where": "audio",
-      "code": "extern float dac7554_cv4; dac7554_cv4 = $ * 7.f;"
-    },
-    "out 2 cv5": {
-      "where": "audio",
-      "code": "extern float dac7554_cv5; dac7554_cv5 = $ * 7.f;"
-    },
-    "out 2 cv6": {
-      "where": "audio",
-      "code": "extern float dac7554_cv6; dac7554_cv6 = $ * 7.f;"
-    },
-    "out 1 gate1": {
-      "where": "audio",
-      "code": "hardware.gate_out_1.Write($ > 0.f);"
-    },
-    "out 1 gate2": {
-      "where": "audio",
-      "code": "hardware.gate_out_2.Write($ > 0.f);"
-    },
-    "out 2 gate1": {
-      "where": "audio",
-      "code": "hardware.gate_out_1.Write($ > 0.f);"
-    },
-    "out 2 gate2": {
-      "where": "audio",
-      "code": "hardware.gate_out_2.Write($ > 0.f);"
+      "code": "hardware.gate_out_2.Write($<name> > 0.f);"
     }
   },
 
-  "datahandlers": {
-    "dsy_midi_in": {
-      "where": "main",
-      "init": "hardware.midi.Listen();",
-      "code": "while(hardware.midi.HasEvents()) { daisy::MidiEvent m = hardware.midi.PopEvent(); daisy.midi_toData(m); }"
-    },
-    "dsy_midi_out": {
-      "where": "main",
-      "init": "hardware.midi_nullData($)",
-      "code": "hardware.midi_fromData($);"
-    }
-  },
-
-
-  "process_controls": {
-    "where": "audio",
-    "code": "oopsy::daisy.hardware.ProcessAllControls();"
-  },
+  "datahandlers": {},
 
   "notes": {
     "audio": "DPT supports stereo audio I/O (24-bit @ 48kHz)",
-    "cv_outputs": "CV outputs 1-2 use native DAC (-5V to +10V), outputs 3-6 use DAC7554 (-7V to +7V)",
-    "gate_io": "2 gate inputs and 2 gate outputs available",
+    "cv_outputs": "cvout1-2 use native DAC (0-5V), cvout3-6 use DAC7554 (-7V to +7V)",
+    "gate_io": "2 gate inputs (gate1, gate2) and 2 gate outputs (gateout1, gateout2)",
     "midi": "MIDI I/O via UART on pins A8 (TX) and A9 (RX)",
-    "cv_inputs": "8 CV inputs with bipolar range, plus 4 additional ADC inputs (ADC_9-12)"
+    "cv_inputs": "8 CV inputs (cv1-cv8) with configurable range"
   }
 }

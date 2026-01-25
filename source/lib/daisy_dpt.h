@@ -2,13 +2,13 @@
 
 #include "daisy.h"
 
+
 // Forward declaration for TimerHandle callback type (for compatibility with libDaisy v4.0.0)
 namespace daisy {
     namespace dpt_internal {
         typedef void (*PeriodElapsedCallback)(void* data);
     }
 }
-
 #ifndef DSY_DEV_DAC_7554_H
 #include "dev/DAC7554.h"
 #endif

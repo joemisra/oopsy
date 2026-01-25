@@ -822,37 +822,142 @@ int main(void) {
 				});
 			}
 		} else {
-			exec(`export PATH=$PATH:${build_tools_path} && make clean && make`, { cwd: build_path }, (err, stdout, stderr) => {
-				if (err) {
+			// Pre-compilation checks
+			const startTime = Date.now();
+			console.log(`oopsy-verbose: Starting compilation at ${new Date().toISOString()}`);
+			console.log(`oopsy-verbose: Build path: ${build_path}`);
+			console.log(`oopsy-verbose: Build tools path: ${build_tools_path}`);
+			
+			// Check if critical files are accessible
+			const libdaisy_path = path.join(__dirname, "libdaisy");
+			const test_files = [
+				path.join(libdaisy_path, "Drivers", "STM32H7xx_HAL_Driver", "Inc", "stm32h7xx_hal_dac.h"),
+				path.join(libdaisy_path, "Drivers", "STM32H7xx_HAL_Driver", "Inc", "stm32h7xx_hal_pwr.h"),
+				path.join(libdaisy_path, "core", "Makefile")
+			];
+			
+			console.log(`oopsy-verbose: Checking file accessibility...`);
+			let fileAccessIssues = false;
+			test_files.forEach(test_file => {
+				try {
+					const stats = fs.statSync(test_file);
+					console.log(`oopsy-verbose: ✓ ${path.basename(test_file)} accessible (${stats.size} bytes)`);
+					// Try to actually read the file to ensure it's not blocked
+					try {
+						fs.readFileSync(test_file, 'utf8', { flag: 'r' });
+					} catch (readErr) {
+						console.log(`oopsy-verbose: ⚠ ${path.basename(test_file)} readable but may have access issues: ${readErr.message}`);
+						fileAccessIssues = true;
+					}
+				} catch (e) {
+					console.log(`oopsy-verbose: ✗ ${path.basename(test_file)} NOT accessible: ${e.message}`);
+					fileAccessIssues = true;
+				}
+			});
+			
+			if (fileAccessIssues) {
+				console.log(`oopsy-verbose: ⚠ File access issues detected - compilation may timeout`);
+				console.log(`oopsy-verbose: Check Activity Monitor for mds_stores process (Spotlight indexing)`);
+			}
+			
+			// Use spawn for better real-time output and timeout handling
+			const makeProcess = spawn('sh', ['-c', `export PATH=$PATH:${build_tools_path} && make clean && make`], {
+				cwd: build_path,
+				stdio: ['ignore', 'pipe', 'pipe']
+			});
+			
+			let stdout = '';
+			let stderr = '';
+			let lastOutputTime = Date.now();
+			const TIMEOUT_MS = 300000; // 5 minute timeout
+			let timeoutHandle;
+			
+			// Set up timeout
+			timeoutHandle = setTimeout(() => {
+				if (makeProcess && !makeProcess.killed) {
+					console.log(`oopsy-verbose: Compilation timeout after ${TIMEOUT_MS/1000}s, killing process...`);
+					makeProcess.kill('SIGKILL');
+				}
+			}, TIMEOUT_MS);
+			
+			makeProcess.stdout.on('data', (data) => {
+				const output = data.toString();
+				stdout += output;
+				lastOutputTime = Date.now();
+				// Log compilation progress in real-time
+				if (output.includes('arm-none-eabi-gcc') || output.includes('arm-none-eabi-g++')) {
+					const match = output.match(/(\S+\.(c|cpp|h|hpp))/);
+					if (match) {
+						console.log(`oopsy-verbose: Compiling ${match[1]}...`);
+					}
+				}
+				// Log any warnings or important messages
+				if (output.includes('warning:') || output.includes('error:')) {
+					console.log(`oopsy-verbose: ${output.trim()}`);
+				}
+			});
+			
+			makeProcess.stderr.on('data', (data) => {
+				const output = data.toString();
+				stderr += output;
+				lastOutputTime = Date.now();
+				console.log(`oopsy-verbose: stderr: ${output.trim()}`);
+			});
+			
+			makeProcess.on('close', (code) => {
+				clearTimeout(timeoutHandle);
+				const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+				console.log(`oopsy-verbose: Compilation finished with code ${code} after ${elapsed}s`);
+				
+				if (code !== 0) {
 					console.log("oopsy compiler error")
-					console.log(err);
-					console.log(stderr);
+					console.log(`oopsy-verbose: Exit code: ${code}`);
+					console.log(`oopsy-verbose: Full stdout:\n${stdout}`);
+					console.log(`oopsy-verbose: Full stderr:\n${stderr}`);
+					
+					// Check for timeout errors specifically
+					if (stderr.includes('Operation timed out') || stdout.includes('Operation timed out')) {
+						console.log(`oopsy-verbose: File system timeout detected!`);
+						console.log(`oopsy-verbose: Last output was ${((Date.now() - lastOutputTime) / 1000).toFixed(2)}s ago`);
+						console.log(`oopsy-verbose: This suggests Spotlight indexing or file system issues.`);
+						console.log(`oopsy-verbose: Check Activity Monitor for mds_stores process.`);
+					}
+					
 					return;
 				}
-				console.log(`oopsy created binary ${Math.ceil(fs.statSync(posixify_path(path.join(build_path, "build", build_name + ".bin")))["size"] / 1024)}KB`)
-				// if successful, try to upload to hardware:
-				if (has_dfu_util && action == "upload") {
-					console.log("oopsy flashing...")
-					exec(`export PATH=$PATH:${build_tools_path} && make program-dfu`, { cwd: build_path }, (err, stdout, stderr) => {
-						console.log("stdout", stdout)
-						console.log("stderr", stderr)
-						if (err) {
-							if (err.message.includes("No DFU capable USB device available")) {
-								console.log("oopsy daisy not ready on USB")
-								return;
-							} else if (stdout.includes("File downloaded successfully")) {
-								console.log("oopsy flashed")
-							} else {
+				
+				try {
+					const binPath = posixify_path(path.join(build_path, "build", build_name + ".bin"));
+					const binSize = fs.statSync(binPath)["size"];
+					console.log(`oopsy created binary ${Math.ceil(binSize / 1024)}KB`)
+					console.log(`oopsy-verbose: Binary written to ${binPath}`);
+					
+					// if successful, try to upload to hardware:
+					if (has_dfu_util && action == "upload") {
+						console.log("oopsy flashing...")
+						exec(`export PATH=$PATH:${build_tools_path} && make program-dfu`, { cwd: build_path }, (err, stdout, stderr) => {
+							console.log("stdout", stdout)
+							console.log("stderr", stderr)
+							if (err) {
+								if (err.message.includes("No DFU capable USB device available")) {
+									console.log("oopsy daisy not ready on USB")
+									return;
+								} else if (stdout.includes("File downloaded successfully")) {
+									console.log("oopsy flashed")
+								} else {
+									console.log("oopsy dfu error")
+									console.log(err.message);
+									return;
+								}
+							} else if (stderr) {
 								console.log("oopsy dfu error")
-								console.log(err.message);
+								console.log(stderr);
 								return;
 							}
-						} else if (stderr) {
-							console.log("oopsy dfu error")
-							console.log(stderr);
-							return;
-						}
-					});
+						});
+					}
+				} catch (e) {
+					console.log(`oopsy-verbose: Error checking binary: ${e.message}`);
 				}
 			});
 		}

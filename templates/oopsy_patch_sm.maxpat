@@ -1013,11 +1013,11 @@
 					"patching_rect" : [ 47.0, 363.0, 195.0, 35.0 ],
 					"saved_object_attributes" : 					{
 						"exportfolder" : "macOS:/Users/corvus/Documents/Max 8/Packages/oopsy/templates/",
-						"exportname" : "oopsy_patch_sm"
+						"exportname" : "oopsy_dpt"
 					}
 ,
 					"text" : "gen~",
-					"varname" : "oopsy_patch_sm"
+					"varname" : "oopsy_dpt"
 				}
 
 			}

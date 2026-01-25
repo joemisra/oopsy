@@ -3,14 +3,14 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 1,
-			"revision" : 8,
+			"minor" : 6,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 392.0, 105.0, 1246.0, 808.0 ],
+		"rect" : [ 160.0, 87.0, 1246.0, 779.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 1,
 		"default_fontsize" : 12.0,
@@ -142,6 +142,7 @@
 							"parameter_linknames" : 1,
 							"parameter_longname" : "live.text[3]",
 							"parameter_mmax" : 1,
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "FILTER",
 							"parameter_type" : 2
 						}
@@ -174,6 +175,7 @@
 							"parameter_linknames" : 1,
 							"parameter_longname" : "live.text[1]",
 							"parameter_mmax" : 1,
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "FILTER",
 							"parameter_type" : 2
 						}
@@ -309,6 +311,7 @@
 							"parameter_linknames" : 1,
 							"parameter_longname" : "live.text[2]",
 							"parameter_mmax" : 1,
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "FILTER",
 							"parameter_type" : 2
 						}
@@ -353,7 +356,7 @@
 				"box" : 				{
 					"fontsize" : 9.0,
 					"id" : "obj-76",
-					"items" : [ "patch", ",", "patch_sm", ",", "field", ",", "petal", ",", "pod", ",", "versio", ",", "bluemchen", ",", "nehcmeulb" ],
+					"items" : [ "patch", ",", "patch_sm", ",", "field", ",", "petal", ",", "pod", ",", "versio", ",", "bluemchen", ",", "nehcmeulb", ",", "dpt" ],
 					"maxclass" : "umenu",
 					"numinlets" : 1,
 					"numoutlets" : 3,
@@ -376,14 +379,14 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 1,
-							"revision" : 8,
+							"minor" : 6,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 613.0, 269.0, 918.0, 472.0 ],
+						"rect" : [ 488.0, 269.0, 918.0, 472.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -413,6 +416,18 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-3",
+									"maxclass" : "slider",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 42.0, 119.0, 20.0, 140.0 ]
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-31",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
@@ -427,11 +442,11 @@
 								"box" : 								{
 									"id" : "obj-29",
 									"maxclass" : "newobj",
-									"numinlets" : 9,
-									"numoutlets" : 9,
-									"outlettype" : [ "", "", "", "", "", "", "", "", "" ],
+									"numinlets" : 10,
+									"numoutlets" : 10,
+									"outlettype" : [ "", "", "", "", "", "", "", "", "", "" ],
 									"patching_rect" : [ 17.0, 97.0, 387.0, 22.0 ],
-									"text" : "routepass patch patch_sm field petal pod versio bluemchen nehcmeulb"
+									"text" : "routepass patch patch_sm field petal pod versio bluemchen nehcmeulb dpt"
 								}
 
 							}
@@ -570,13 +585,13 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-2",
-									"linecount" : 2,
+									"linecount" : 3,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 544.0, 329.0, 372.0, 35.0 ],
-									"text" : "clear, append patch, append patch_sm, append field, append petal, append pod, append versio, append bluemchen, append nehcmeulb"
+									"patching_rect" : [ 544.0, 329.0, 370.0, 49.0 ],
+									"text" : "clear, append patch, append patch_sm, append field, append petal, append pod, append versio, append bluemchen, append nehcmeulb, append dpt"
 								}
 
 							}
@@ -686,6 +701,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-27", 0 ],
 									"source" : [ "obj-29", 8 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-37", 0 ],
+									"source" : [ "obj-29", 9 ]
 								}
 
 							}
@@ -1000,8 +1022,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 1,
-							"revision" : 8,
+							"minor" : 6,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -1264,11 +1286,12 @@
 					"id" : "obj-8",
 					"maxclass" : "newobj",
 					"numinlets" : 2,
-					"numoutlets" : 4,
-					"outlettype" : [ "dictionary", "", "", "" ],
+					"numoutlets" : 5,
+					"outlettype" : [ "dictionary", "", "", "", "" ],
 					"patching_rect" : [ 580.0, 615.0, 50.5, 22.0 ],
 					"saved_object_attributes" : 					{
 						"embed" : 0,
+						"legacy" : 1,
 						"parameter_enable" : 0,
 						"parameter_mappable" : 0
 					}
@@ -1381,8 +1404,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 1,
-							"revision" : 8,
+							"minor" : 6,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -1984,15 +2007,15 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "oopsy.snoop.js",
-				"bootpath" : "~/Documents/Max 8/Packages/oopsy/javascript",
+				"name" : "oopsy.node4max.js",
+				"bootpath" : "~/Documents/Max 8/Library/oopsy_repo/javascript",
 				"patcherrelativepath" : "../javascript",
 				"type" : "TEXT",
 				"implicit" : 1
 			}
 , 			{
-				"name" : "oopsy.node4max.js",
-				"bootpath" : "~/Documents/Max 8/Packages/oopsy/javascript",
+				"name" : "oopsy.snoop.js",
+				"bootpath" : "~/Documents/Max 8/Library/oopsy_repo/javascript",
 				"patcherrelativepath" : "../javascript",
 				"type" : "TEXT",
 				"implicit" : 1
