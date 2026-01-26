@@ -370,6 +370,7 @@ namespace dpt
         GPIO          user_led;
         AnalogControl controls[ADC_LAST];
         GateIn        gate_in_1, gate_in_2;
+        bool          gate_in_1_trig, gate_in_2_trig;  // Rising edge detection (updated by ProcessDigitalControls)
         GPIO          gate_out_1, gate_out_2;
         GPIO          clicker1, clicker2;
 

@@ -34,7 +34,12 @@
       "cv8": "cv8",
       "gate1": "gate1",
       "gate2": "gate2",
+      "gate1_trig": "gate1_trig",
+      "gate2_trig": "gate2_trig",
       "gate": "gate1",
+      "trig1": "gate1_trig",
+      "trig2": "gate2_trig",
+      "trig": "gate1_trig",
       "cv": "cv1",
       "knob1": "cv1",
       "knob2": "cv2",
@@ -108,6 +113,12 @@
     },
     "gate2": {
       "code": "(hardware.gate_in_2.State() ? 1.f : 0.f)"
+    },
+    "gate1_trig": {
+      "code": "(hardware.gate_in_1_trig ? 1.f : 0.f)"
+    },
+    "gate2_trig": {
+      "code": "(hardware.gate_in_2_trig ? 1.f : 0.f)"
     }
   },
 

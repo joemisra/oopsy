@@ -341,6 +341,8 @@ namespace dpt
         // libdaisy v4: GateIn::Init takes dsy_gpio_pin*, needs cast from Pin
         gate_in_1.Init((dsy_gpio_pin *)&B10);
         gate_in_2.Init((dsy_gpio_pin *)&B9);
+        gate_in_1_trig = false;
+        gate_in_2_trig = false;
 
         gate_out_1.Init(B6, GPIO::Mode::OUTPUT, GPIO::Pull::NOPULL);
         gate_out_2.Init(B5, GPIO::Mode::OUTPUT, GPIO::Pull::NOPULL);
@@ -477,7 +479,11 @@ namespace dpt
         }
     }
 
-    void DPT::ProcessDigitalControls() {}
+    void DPT::ProcessDigitalControls() {
+        // Update gate trigger state for edge detection
+        gate_in_1_trig = gate_in_1.Trig();
+        gate_in_2_trig = gate_in_2.Trig();
+    }
 
     float DPT::GetAdcValue(int idx) { return controls[idx].Value(); }
 
