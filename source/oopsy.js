@@ -935,7 +935,7 @@ int main(void) {
 					// if successful, try to upload to hardware:
 					if (has_dfu_util && action == "upload") {
 						console.log("oopsy flashing...")
-						exec(`export PATH=$PATH:${build_tools_path} && make program-dfu`, { cwd: build_path }, (err, stdout, stderr) => {
+						exec(`export PATH=$PATH:${build_tools_path} && make program`, { cwd: build_path }, (err, stdout, stderr) => {
 							console.log("stdout", stdout)
 							console.log("stderr", stderr)
 							if (err) {
