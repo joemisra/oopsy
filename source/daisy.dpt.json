@@ -70,6 +70,8 @@
       "gate1": "gateout1",
       "gate2": "gateout2",
       "gate": "gateout1",
+      "gate_out_1": "gateout1",
+      "gate_out_2": "gateout2",
       "led": "cvout1"
     },
     "datas": {}
@@ -149,11 +151,11 @@
     },
     "gateout1": {
       "where": "audio",
-      "code": "hardware.gate_out_1.Write($<name> > 0.f);"
+      "code": "dsy_gpio_write(&hardware.gate_out_1, $<name> > 0.f);"
     },
     "gateout2": {
       "where": "audio",
-      "code": "hardware.gate_out_2.Write($<name> > 0.f);"
+      "code": "dsy_gpio_write(&hardware.gate_out_2, $<name> > 0.f);"
     }
   },
 

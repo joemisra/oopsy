@@ -344,8 +344,37 @@ namespace dpt
         gate_in_1_trig = false;
         gate_in_2_trig = false;
 
-        gate_out_1.Init(B6, GPIO::Mode::OUTPUT, GPIO::Pull::NOPULL);
-        gate_out_2.Init(B5, GPIO::Mode::OUTPUT, GPIO::Pull::NOPULL);
+        // B5 = PORTC, 13 = GATE OUT 1
+        // B6 = PORTC, 14 = GATE OUT 2
+        gate_out_1.mode = DSY_GPIO_MODE_OUTPUT_PP;
+        gate_out_1.pull = DSY_GPIO_NOPULL;
+        gate_out_1.pin  = B5;
+        dsy_gpio_init(&gate_out_1);
+
+        gate_out_2.mode = DSY_GPIO_MODE_OUTPUT_PP;
+        gate_out_2.pull = DSY_GPIO_NOPULL;
+        gate_out_2.pin  = B6;
+        dsy_gpio_init(&gate_out_2);
+
+        // Startup blink test to verify GPIO initialization
+        // Blink pattern: gate_out_1 ON, gate_out_2 OFF -> both OFF -> gate_out_1 OFF, gate_out_2 ON -> both OFF (repeat 3x)
+        for(int i = 0; i < 3; i++) {
+            dsy_gpio_write(&gate_out_1, true);
+            dsy_gpio_write(&gate_out_2, false);
+            System::Delay(100);
+            dsy_gpio_write(&gate_out_1, false);
+            dsy_gpio_write(&gate_out_2, false);
+            System::Delay(50);
+            dsy_gpio_write(&gate_out_1, false);
+            dsy_gpio_write(&gate_out_2, true);
+            System::Delay(100);
+            dsy_gpio_write(&gate_out_1, false);
+            dsy_gpio_write(&gate_out_2, false);
+            System::Delay(50);
+        }
+        // Ensure gate outputs start LOW after blink test
+        dsy_gpio_write(&gate_out_1, false);
+        dsy_gpio_write(&gate_out_2, false);
 
 
         // Init MIDI i/o
