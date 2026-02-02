@@ -4,8 +4,8 @@
 
 set -e
 
-BUILD_DIR="/Users/jm/Documents/Max 8/Library/oopsy_repo/source/build_squine_dpt"
-ELF_FILE="${BUILD_DIR}/build/squine.elf"
+BUILD_DIR="/Users/jm/Documents/Max 8/Library/oopsy_repo/source/build_reverb_dpt"
+ELF_FILE="${BUILD_DIR}/build/reverb.elf"
 
 if [ ! -f "$ELF_FILE" ]; then
     echo "Error: ELF file not found at $ELF_FILE"

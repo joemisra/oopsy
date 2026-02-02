@@ -3,14 +3,14 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 8,
-			"minor" : 1,
-			"revision" : 8,
+			"minor" : 6,
+			"revision" : 5,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 926.0, 78.0, 576.0, 594.0 ],
+		"rect" : [ 81.0, 87.0, 338.0, 594.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -40,6 +40,30 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-8",
+					"maxclass" : "number",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 154.0, 241.0, 50.0, 22.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-5",
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "signal" ],
+					"patching_rect" : [ 152.0, 296.0, 76.0, 22.0 ],
+					"text" : "phasor~ 440"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"bgmode" : 0,
 					"border" : 0,
 					"clickthrough" : 0,
@@ -47,6 +71,7 @@
 					"enablevscroll" : 0,
 					"id" : "obj-9",
 					"lockeddragscroll" : 0,
+					"lockedsize" : 0,
 					"maxclass" : "bpatcher",
 					"name" : "oopsy.maxpat",
 					"numinlets" : 1,
@@ -64,7 +89,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 191.5, 508.0, 337.0, 62.0 ],
+					"patching_rect" : [ 191.5, 508.0, 337.0, 60.0 ],
 					"text" : "Adapted from the Dattoro reverb gen~ example included with Max, which is based on Jon Dattorro's Effect Design Part 1: Reverberator and Other Filters, located here: https://ccrma.stanford.edu/~dattorro/EffectDesignPart1.pdf"
 				}
 
@@ -84,6 +109,7 @@
 							"parameter_longname" : "live.gain~",
 							"parameter_mmax" : 6.0,
 							"parameter_mmin" : -70.0,
+							"parameter_modmode" : 0,
 							"parameter_shortname" : "live.gain~",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 4
@@ -106,14 +132,14 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 8,
-							"minor" : 1,
-							"revision" : 8,
+							"minor" : 6,
+							"revision" : 5,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
 						"classnamespace" : "dsp.gen",
-						"rect" : [ 739.0, 102.0, 868.0, 840.0 ],
+						"rect" : [ 739.0, 87.0, 868.0, 599.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -172,8 +198,8 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 482.0, 451.666655999999989, 94.0, 22.0 ],
-									"text" : "param ctrl1_wet"
+									"patching_rect" : [ 343.0, 469.0, 210.0, 22.0 ],
+									"text" : "param cv8_wet 0.5 @min 0. @max 1."
 								}
 
 							}
@@ -317,8 +343,8 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 8,
-											"minor" : 1,
-											"revision" : 8,
+											"minor" : 6,
+											"revision" : 5,
 											"architecture" : "x64",
 											"modernui" : 1
 										}
@@ -1989,8 +2015,8 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 372.5, 451.666655999999989, 98.0, 22.0 ],
-									"text" : "param decay 0.5"
+									"patching_rect" : [ 343.0, 424.0, 223.0, 22.0 ],
+									"text" : "param cv1_decay 0.5 @min 0. @max 1."
 								}
 
 							}
@@ -2001,8 +2027,8 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 207.0, 233.0, 112.0, 22.0 ],
-									"text" : "param damping 0.5"
+									"patching_rect" : [ 231.0, 248.0, 237.0, 22.0 ],
+									"text" : "param cv4_damping 0.5 @min 0. @max 1."
 								}
 
 							}
@@ -2041,14 +2067,14 @@
 										"fileversion" : 1,
 										"appversion" : 										{
 											"major" : 8,
-											"minor" : 1,
-											"revision" : 8,
+											"minor" : 6,
+											"revision" : 5,
 											"architecture" : "x64",
 											"modernui" : 1
 										}
 ,
 										"classnamespace" : "dsp.gen",
-										"rect" : [ 80.0, 104.0, 372.0, 680.0 ],
+										"rect" : [ 321.0, 87.0, 372.0, 599.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
 										"default_fontsize" : 12.0,
@@ -2716,8 +2742,8 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 181.0, 76.0, 215.0, 22.0 ],
-									"text" : "param predelay 10 @min 0 @max 100"
+									"patching_rect" : [ 181.0, 76.0, 247.0, 22.0 ],
+									"text" : "param cv5_predelay 10 @min 0. @max 100."
 								}
 
 							}
@@ -2974,7 +3000,7 @@
 ,
 					"patching_rect" : [ 24.0, 272.0, 36.0, 22.0 ],
 					"saved_object_attributes" : 					{
-						"exportfolder" : "C:/Users/shensley/Documents/Max 8/Packages/oopsy/examples/",
+						"exportfolder" : "Macintosh HD:/Users/jm/Documents/Max 8/Library/oopsy_repo/examples/",
 						"exportname" : "reverb"
 					}
 ,
@@ -2991,7 +3017,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 24.0, 26.0, 261.0, 34.0 ],
+					"patching_rect" : [ 24.0, 26.0, 261.0, 33.0 ],
 					"text" : "Reverb"
 				}
 
@@ -3008,6 +3034,13 @@
 			}
  ],
 		"lines" : [ 			{
+				"patchline" : 				{
+					"destination" : [ "obj-4", 1 ],
+					"source" : [ "obj-1", 1 ]
+				}
+
+			}
+, 			{
 				"patchline" : 				{
 					"destination" : [ "obj-4", 0 ],
 					"source" : [ "obj-1", 0 ]
@@ -3028,11 +3061,26 @@
 				}
 
 			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-5", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-5", 0 ],
+					"source" : [ "obj-8", 0 ]
+				}
+
+			}
  ],
 		"parameters" : 		{
 			"obj-4" : [ "live.gain~", "live.gain~", 0 ],
 			"obj-9::obj-32" : [ "live.text[2]", "FILTER", 0 ],
-			"obj-9::obj-36" : [ "live.menu[1]", "live.menu", 0 ],
+			"obj-9::obj-33" : [ "live.text[1]", "FILTER", 0 ],
+			"obj-9::obj-34" : [ "live.text[3]", "FILTER", 0 ],
 			"parameterbanks" : 			{
 
 			}
@@ -3042,21 +3090,21 @@
 ,
 		"dependency_cache" : [ 			{
 				"name" : "oopsy.maxpat",
-				"bootpath" : "~/Documents/Max 8/Packages/oopsy/patchers",
+				"bootpath" : "~/Documents/Max 8/Library/oopsy_repo/patchers",
 				"patcherrelativepath" : "../patchers",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
-				"name" : "oopsy.snoop.js",
-				"bootpath" : "~/Documents/Max 8/Packages/oopsy/javascript",
+				"name" : "oopsy.node4max.js",
+				"bootpath" : "~/Documents/Max 8/Library/oopsy_repo/javascript",
 				"patcherrelativepath" : "../javascript",
 				"type" : "TEXT",
 				"implicit" : 1
 			}
 , 			{
-				"name" : "oopsy.node4max.js",
-				"bootpath" : "~/Documents/Max 8/Packages/oopsy/javascript",
+				"name" : "oopsy.snoop.js",
+				"bootpath" : "~/Documents/Max 8/Library/oopsy_repo/javascript",
 				"patcherrelativepath" : "../javascript",
 				"type" : "TEXT",
 				"implicit" : 1

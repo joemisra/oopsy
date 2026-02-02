@@ -18,8 +18,7 @@
     { "where": "header", "code": "typedef daisy::dpt::DPT Daisy;" },
     { "where": "header", "code": "static float dac7554_cv3 = 0.f, dac7554_cv4 = 0.f, dac7554_cv5 = 0.f, dac7554_cv6 = 0.f;" },
     { "where": "init", "code": "oopsy::daisy.hardware.InitMidi();" },
-    { "where": "init", "code": "oopsy::daisy.hardware.midi.StartReceive();" },
-    { "where": "init", "code": "oopsy::daisy.hardware.StartDacExp(nullptr);" }
+    { "where": "init", "code": "oopsy::daisy.hardware.midi.StartReceive();" }
   ],
 
   "labels": {

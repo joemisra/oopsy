@@ -661,11 +661,14 @@ function run() {
 	}
 
 	if (apps.length > 1) {
-		defines.OOPSY_MULTI_APP = 1
-		// generate midi-handling code for any multi-app on a midi-enabled platform
-		// so that program-change messages for apps will work:
-		if (hardware.defines.OOPSY_TARGET_HAS_MIDI_INPUT) {
-			hardware.defines.OOPSY_TARGET_USES_MIDI_UART = 1
+		// DPT has no menu navigation hardware, so disable multi-app mode
+		if (!hardware.defines.OOPSY_TARGET_DPT) {
+			defines.OOPSY_MULTI_APP = 1
+			// generate midi-handling code for any multi-app on a midi-enabled platform
+			// so that program-change messages for apps will work:
+			if (hardware.defines.OOPSY_TARGET_HAS_MIDI_INPUT) {
+				hardware.defines.OOPSY_TARGET_USES_MIDI_UART = 1
+			}
 		}
 	}
 	if (options.nooled && defines.OOPSY_TARGET_HAS_OLED) {

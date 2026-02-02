@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 256.0, 126.0, 460.0, 560.0 ],
+		"rect" : [ 309.0, 167.0, 1078.0, 599.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -90,7 +90,7 @@
 						}
 ,
 						"classnamespace" : "dsp.gen",
-						"rect" : [ 316.0, 152.0, 628.0, 418.0 ],
+						"rect" : [ 41.0, 62.0, 780.0, 617.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -106,7 +106,7 @@
 						"toptoolbarpinned" : 0,
 						"righttoolbarpinned" : 0,
 						"bottomtoolbarpinned" : 0,
-						"toolbars_unpinned_last_save" : 6,
+						"toolbars_unpinned_last_save" : 2,
 						"tallnewobj" : 0,
 						"boxanimatetime" : 200,
 						"enablehscroll" : 1,
@@ -125,7 +125,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 398.0, 193.0, 36.0, 22.0 ],
+									"patching_rect" : [ 589.0, 348.0, 36.0, 22.0 ],
 									"text" : "< 0.5"
 								}
 
@@ -137,18 +137,19 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 349.0, 193.0, 36.0, 22.0 ],
+									"patching_rect" : [ 488.0, 348.0, 36.0, 22.0 ],
 									"text" : "> 0.5"
 								}
 
 							}
 , 							{
 								"box" : 								{
+									"bgcolor" : [ 0.027450980392157, 0.462745098039216, 0.0, 1.0 ],
 									"id" : "obj-36",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 492.0, 230.0, 105.0, 22.0 ],
+									"patching_rect" : [ 589.0, 380.0, 105.0, 22.0 ],
 									"text" : "out 10 gate_out_2"
 								}
 
@@ -167,11 +168,12 @@
 							}
 , 							{
 								"box" : 								{
+									"bgcolor" : [ 0.027450980392157, 0.462745098039216, 0.0, 1.0 ],
 									"id" : "obj-26",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 349.0, 230.0, 99.0, 22.0 ],
+									"patching_rect" : [ 488.0, 380.0, 99.0, 22.0 ],
 									"text" : "out 9 gate_out_1"
 								}
 
@@ -183,7 +185,7 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 480.0, 380.0, 35.0, 22.0 ],
+									"patching_rect" : [ 451.0, 380.0, 35.0, 22.0 ],
 									"text" : "out 8"
 								}
 
@@ -195,7 +197,7 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 443.0, 380.0, 35.0, 22.0 ],
+									"patching_rect" : [ 414.0, 380.0, 35.0, 22.0 ],
 									"text" : "out 7"
 								}
 
@@ -207,7 +209,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 406.0, 335.0, 37.0, 22.0 ],
+									"patching_rect" : [ 377.0, 335.0, 37.0, 22.0 ],
 									"text" : "* -0.5"
 								}
 
@@ -219,7 +221,7 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 406.0, 380.0, 35.0, 22.0 ],
+									"patching_rect" : [ 377.0, 380.0, 35.0, 22.0 ],
 									"text" : "out 6"
 								}
 
@@ -231,7 +233,7 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 369.0, 380.0, 35.0, 22.0 ],
+									"patching_rect" : [ 340.0, 380.0, 35.0, 22.0 ],
 									"text" : "out 5"
 								}
 
@@ -243,7 +245,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 332.0, 335.0, 44.0, 22.0 ],
+									"patching_rect" : [ 303.0, 335.0, 44.0, 22.0 ],
 									"text" : "* -0.75"
 								}
 
@@ -255,7 +257,7 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 332.0, 380.0, 35.0, 22.0 ],
+									"patching_rect" : [ 303.0, 380.0, 35.0, 22.0 ],
 									"text" : "out 4"
 								}
 
@@ -267,7 +269,7 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 295.0, 380.0, 35.0, 22.0 ],
+									"patching_rect" : [ 266.0, 380.0, 35.0, 22.0 ],
 									"text" : "out 3"
 								}
 
@@ -433,7 +435,7 @@
 										}
 ,
 										"classnamespace" : "dsp.gen",
-										"rect" : [ 34.0, 87.0, 1227.0, 599.0 ],
+										"rect" : [ 610.0, 87.0, 595.0, 599.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
 										"default_fontsize" : 12.0,

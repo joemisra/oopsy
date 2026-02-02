@@ -56,29 +56,46 @@ namespace oopsy {
 
 	uint32_t sram_used = 0, sram_usable = 0;
 	uint32_t sdram_used = 0, sdram_usable = 0;
-	char * sram_pool = nullptr;
-	char DSY_SDRAM_BSS sdram_pool[OOPSY_SDRAM_SIZE];
+	
+	// Use SRAM for most allocations, fall back to SDRAM for large buffers
+	#ifdef OOPSY_TARGET_DPT
+		// DPT: Use larger SRAM pool, with SDRAM fallback for big delay patches
+		static const uint32_t SRAM_POOL_SIZE = 256 * 1024;
+		char sram_pool[SRAM_POOL_SIZE];
+		static const uint32_t SDRAM_POOL_SIZE = OOPSY_SDRAM_SIZE;
+		char DSY_SDRAM_BSS sdram_pool[OOPSY_SDRAM_SIZE];
+	#else
+		// Other targets: smaller SRAM pool, use SDRAM for big buffers
+		static const uint32_t SRAM_POOL_SIZE = 64 * 1024;
+		char sram_pool[SRAM_POOL_SIZE];
+		static const uint32_t SDRAM_POOL_SIZE = OOPSY_SDRAM_SIZE;
+		char DSY_SDRAM_BSS sdram_pool[OOPSY_SDRAM_SIZE];
+	#endif
 
 	void init() {
-		if (!sram_pool) sram_pool = (char *)malloc(OOPSY_SRAM_SIZE);
-		sram_usable = OOPSY_SRAM_SIZE;
+		sram_usable = SRAM_POOL_SIZE;
 		sram_used = 0;
-		sdram_usable = OOPSY_SDRAM_SIZE;
+		sdram_usable = SDRAM_POOL_SIZE;
 		sdram_used = 0;
 	}
 
 	void * allocate(uint32_t size) {
-		if (size < sram_usable) {
+		// Align allocations to 4 bytes for safety
+		size = (size + 3) & ~3;
+		
+		if (size <= sram_usable) {
 			void * p = sram_pool + sram_used;
 			sram_used += size;
 			sram_usable -= size;
 			return p;
-		} else if (size < sdram_usable) {
+		} 
+		else if (size <= sdram_usable) {
 			void * p = sdram_pool + sdram_used;
 			sdram_used += size;
 			sdram_usable -= size;
 			return p;
 		}
+		// Allocation failed - return nullptr but don't crash
 		return nullptr;
 	}	
 
@@ -576,7 +593,7 @@ namespace oopsy {
 					#ifdef OOPSY_TARGET_PETAL
 					// has no mode selection
 					is_mode_selecting = 0;
-					#if defined(OOPSY_MULTI_APP)
+					#if defined(OOPSY_MULTI_APP) && !defined(OOPSY_TARGET_DPT)
 					// multi-app is always in menu mode:
 					mode = MODE_MENU;
 					#endif
@@ -593,7 +610,7 @@ namespace oopsy {
 					#ifdef OOPSY_TARGET_VERSIO
 					// has no mode selection
 					is_mode_selecting = 0;
-					#if defined(OOPSY_MULTI_APP)
+					#if defined(OOPSY_MULTI_APP) && !defined(OOPSY_TARGET_DPT)
 					// multi-app is always in menu mode:
 					mode = MODE_MENU;
 					#endif
@@ -621,6 +638,7 @@ namespace oopsy {
 						#endif	
 					#ifdef OOPSY_MULTI_APP
 					} else if (mode == MODE_MENU) {
+						#ifndef OOPSY_TARGET_DPT  // DPT has no menu navigation hardware
 						#ifdef OOPSY_TARGET_VERSIO
 						app_selecting = menu_button_incr;
 						#else
@@ -628,6 +646,7 @@ namespace oopsy {
 						#endif
 						if (app_selecting >= app_count) app_selecting -= app_count;
 						if (app_selecting < 0) app_selecting += app_count;
+						#endif // OOPSY_TARGET_DPT
 					#endif // OOPSY_MULTI_APP
 					#ifdef OOPSY_TARGET_HAS_OLED
 					} else if (mode == MODE_SCOPE) {
@@ -660,6 +679,7 @@ namespace oopsy {
 							is_mode_selecting = 0;
 						#ifdef OOPSY_MULTI_APP
 						} else if (mode == MODE_MENU) {
+							#ifndef OOPSY_TARGET_DPT  // DPT has no menu navigation hardware
 							if (app_selected != app_selecting) {
 								app_selected = app_selecting;
 								#ifndef OOPSY_TARGET_HAS_OLED
@@ -668,6 +688,7 @@ namespace oopsy {
 								schedule_app_load(app_selected); //appdefs[app_selected].load();
 								//continue;
 							}
+							#endif // OOPSY_TARGET_DPT
 						#endif
 						#ifdef OOPSY_TARGET_HAS_OLED
 						} else if (mode == MODE_SCOPE) {
